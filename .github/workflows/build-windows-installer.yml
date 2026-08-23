@@ -1,0 +1,76 @@
+name: Build TEK STOCK Windows Installer
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - fix/sync-network-failover
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    env:
+      CSC_IDENTITY_AUTO_DISCOVERY: "false"
+      TEK_STOCK_CLOUDFLARE_CONFIG_JSON: ${{ secrets.TEK_STOCK_CLOUDFLARE_CONFIG_JSON }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Materialize Cloudflare release config
+        shell: pwsh
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:TEK_STOCK_CLOUDFLARE_CONFIG_JSON)) {
+            throw "Missing repository secret TEK_STOCK_CLOUDFLARE_CONFIG_JSON"
+          }
+          $config = $env:TEK_STOCK_CLOUDFLARE_CONFIG_JSON | ConvertFrom-Json
+          if ([string]::IsNullOrWhiteSpace([string]$config.apiBaseUrl)) {
+            throw "Cloudflare config is missing apiBaseUrl"
+          }
+          if ([string]::IsNullOrWhiteSpace([string]$config.authorityId)) {
+            throw "Cloudflare config is missing authorityId"
+          }
+          if ([string]::IsNullOrWhiteSpace([string]$config.ossPublicBaseUrl)) {
+            throw "Cloudflare config is missing ossPublicBaseUrl"
+          }
+          New-Item -ItemType Directory -Force -Path inventory | Out-Null
+          $env:TEK_STOCK_CLOUDFLARE_CONFIG_JSON | Set-Content -Path inventory/alibaba-cloud.json -Encoding UTF8 -NoNewline
+
+      - name: Validate injected release config
+        shell: pwsh
+        run: |
+          node -e "const fs=require('fs'); const {validateAlibabaCloudConfig}=require('./alibaba-config.cjs'); const p='inventory/alibaba-cloud.json'; validateAlibabaCloudConfig(JSON.parse(fs.readFileSync(p,'utf8'))); console.log('Cloudflare release config validated')"
+
+      - name: Run full tests
+        run: npm test
+
+      - name: Build NSIS installer
+        run: npm run dist:update
+
+      - name: Remove materialized config from workspace
+        if: always()
+        shell: pwsh
+        run: Remove-Item -Force inventory/alibaba-cloud.json -ErrorAction SilentlyContinue
+
+      - name: Upload installer artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: TEK-STOCK-Windows-Installer
+          path: |
+            dist-update/*.exe
+            dist-update/latest*.yml
+          if-no-files-found: error
+          retention-days: 7

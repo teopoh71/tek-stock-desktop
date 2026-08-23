@@ -32,6 +32,7 @@ const SAFETY_CRITICAL_RUNTIME = [
   "workbook-migration-transaction.cjs",
   "packaged-smoke-runtime.cjs",
   "inventory/excel-delta-core.js",
+  "inventory/excel-sync-core.js",
 ];
 
 function normalizeArchivePath(value) {
@@ -90,25 +91,31 @@ function verifySourceVersion(projectDir) {
   return expectedVersion;
 }
 
+function verifyRuntimeConfigTemplate(projectDir) {
+  const templateFile = path.join(projectDir, "inventory", "alibaba-cloud.example.json");
+  assert.ok(fs.existsSync(templateFile), "runtime cloud configuration template is missing");
+  const template = JSON.parse(fs.readFileSync(templateFile, "utf8"));
+  const allowed = new Set(["apiBaseUrl", "apiFallbackBaseUrls", "authorityId", "ossPublicBaseUrl"]);
+  const unexpected = Object.keys(template).filter((key) => !allowed.has(key));
+  assert.deepEqual(unexpected, [], `runtime config template has unexpected fields: ${unexpected.join(", ")}`);
+  for (const key of ["apiBaseUrl", "ossPublicBaseUrl"]) {
+    assert.equal(typeof template[key], "string", `runtime config template must contain ${key}`);
+  }
+  return template;
+}
+
 function verifySourceCloudConfig(projectDir) {
+  verifyRuntimeConfigTemplate(projectDir);
   const configFile = path.join(projectDir, "inventory", "alibaba-cloud.json");
-  assert.ok(
-    fs.existsSync(configFile),
-    "release packaging requires inventory/alibaba-cloud.json with the actual Alibaba endpoints",
-  );
+  if (!fs.existsSync(configFile)) return null;
   return validateAlibabaCloudConfig(JSON.parse(fs.readFileSync(configFile, "utf8")));
 }
 
 function verifyPackagedArchive(archiveFile, expectedVersion, projectDir = "") {
   assert.ok(fs.existsSync(archiveFile), `packaged app archive is missing: ${archiveFile}`);
-  const packagedFiles = new Set(asar.listPackage(archiveFile).map((name) => (
-    normalizeArchivePath(name)
-  )));
+  const packagedFiles = new Set(asar.listPackage(archiveFile).map((name) => normalizeArchivePath(name)));
   for (const runtimeFile of REQUIRED_CONCURRENT_RUNTIME) {
-    assert.ok(
-      packagedFiles.has(runtimeFile),
-      `packaged app archive is missing concurrent runtime module: ${runtimeFile}`,
-    );
+    assert.ok(packagedFiles.has(runtimeFile), `packaged app archive is missing concurrent runtime module: ${runtimeFile}`);
   }
   const forbidden = [...packagedFiles]
     .map((archivePath) => ({ archivePath, reason: forbiddenPackagedStateReason(archivePath) }))
@@ -119,21 +126,22 @@ function verifyPackagedArchive(archiveFile, expectedVersion, projectDir = "") {
     `forbidden packaged state: ${forbidden.map((entry) => `${entry.reason} (${entry.archivePath})`).join(", ")}`,
   );
   const packageJson = JSON.parse(asar.extractFile(archiveFile, "package.json").toString("utf8"));
-  assert.equal(
-    packageJson.version,
-    expectedVersion,
-    `packaged app.asar version ${packageJson.version} does not match ${expectedVersion}`,
-  );
+  assert.equal(packageJson.version, expectedVersion, `packaged app.asar version ${packageJson.version} does not match ${expectedVersion}`);
   const html = asar.extractFile(archiveFile, "inventory/index.html").toString("utf8");
   verifyHtmlVersion(html, expectedVersion, "packaged inventory/index.html");
+
+  // Production Cloudflare endpoints and credentials are runtime configuration,
+  // not source artifacts. A release may omit the legacy-named packaged config.
+  // If a deployment pipeline injects one, it is still strictly validated.
+  if (packagedFiles.has("inventory/alibaba-cloud.json")) {
+    const cloudConfig = JSON.parse(asar.extractFile(archiveFile, "inventory/alibaba-cloud.json").toString("utf8"));
+    validateAlibabaCloudConfig(cloudConfig);
+  }
   assert.ok(
-    packagedFiles.has("inventory/alibaba-cloud.json"),
-    "packaged app archive is missing the actual Alibaba cloud configuration",
+    packagedFiles.has("inventory/alibaba-cloud.example.json"),
+    "packaged app archive is missing the runtime cloud configuration template",
   );
-  const cloudConfig = JSON.parse(
-    asar.extractFile(archiveFile, "inventory/alibaba-cloud.json").toString("utf8"),
-  );
-  validateAlibabaCloudConfig(cloudConfig);
+
   if (projectDir) {
     for (const runtimeFile of SAFETY_CRITICAL_RUNTIME) {
       const sourceFile = path.join(projectDir, ...runtimeFile.split("/"));
@@ -147,35 +155,20 @@ function verifyPackagedArchive(archiveFile, expectedVersion, projectDir = "") {
       );
     }
   }
-  for (const runtimeFile of [
-    "main.cjs",
-    "preload.cjs",
-    "node_modules/jszip/lib/external.js",
-  ]) {
+  for (const runtimeFile of ["main.cjs", "preload.cjs", "node_modules/jszip/lib/external.js"]) {
     if (!packagedFiles.has(runtimeFile)) continue;
-    const source = asar.extractFile(
-      archiveFile,
-      runtimeFile.replace(/\//g, path.sep),
-    ).toString("utf8");
-    assert.doesNotThrow(
-      () => new vm.Script(source, { filename: runtimeFile }),
-      `packaged JavaScript is corrupt or invalid: ${runtimeFile}`,
-    );
+    const source = asar.extractFile(archiveFile, runtimeFile.replace(/\//g, path.sep)).toString("utf8");
+    assert.doesNotThrow(() => new vm.Script(source, { filename: runtimeFile }), `packaged JavaScript is corrupt or invalid: ${runtimeFile}`);
   }
   return expectedVersion;
 }
 
 async function verifyAfterPack(context) {
   const projectDir = context?.packager?.projectDir || path.resolve(__dirname, "..");
-  const expectedVersion = String(
-    context?.packager?.appInfo?.version || verifySourceVersion(projectDir),
-  );
+  const expectedVersion = String(context?.packager?.appInfo?.version || verifySourceVersion(projectDir));
   assert.equal(verifySourceVersion(projectDir), expectedVersion);
-  verifyPackagedArchive(
-    path.join(context.appOutDir, "resources", "app.asar"),
-    expectedVersion,
-    projectDir,
-  );
+  verifySourceCloudConfig(projectDir);
+  verifyPackagedArchive(path.join(context.appOutDir, "resources", "app.asar"), expectedVersion, projectDir);
   console.log(`Verified packaged TEK STOCK app.asar version ${expectedVersion}.`);
 }
 
@@ -183,11 +176,13 @@ module.exports = verifyAfterPack;
 module.exports.verifyHtmlVersion = verifyHtmlVersion;
 module.exports.forbiddenPackagedStateReason = forbiddenPackagedStateReason;
 module.exports.verifySourceVersion = verifySourceVersion;
+module.exports.verifyRuntimeConfigTemplate = verifyRuntimeConfigTemplate;
 module.exports.verifySourceCloudConfig = verifySourceCloudConfig;
 module.exports.verifyPackagedArchive = verifyPackagedArchive;
 
 if (require.main === module) {
-  const version = verifySourceVersion(path.resolve(__dirname, ".."));
-  verifySourceCloudConfig(path.resolve(__dirname, ".."));
-  console.log(`Verified TEK STOCK source version ${version} and Alibaba cloud configuration.`);
+  const projectDir = path.resolve(__dirname, "..");
+  const version = verifySourceVersion(projectDir);
+  const runtimeConfig = verifySourceCloudConfig(projectDir);
+  console.log(`Verified TEK STOCK source version ${version} and ${runtimeConfig ? "injected" : "template-only"} runtime cloud configuration.`);
 }

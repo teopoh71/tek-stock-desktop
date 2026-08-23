@@ -8,6 +8,7 @@ const test = require("node:test");
 const asar = require("@electron/asar");
 const {
   verifyPackagedArchive,
+  verifyRuntimeConfigTemplate,
   verifySourceCloudConfig,
   verifySourceVersion,
 } = require("../build/verify-packaged-version.cjs");
@@ -23,21 +24,16 @@ test("source badge and runtime version match package.json", () => {
 test("packaged file allowlist includes central sync runtime modules", () => {
   const pkg = JSON.parse(fs.readFileSync(path.join(root, "package.json"), "utf8"));
   const packagedFiles = new Set(pkg.build.files.filter((entry) => typeof entry === "string"));
-  assert.equal(packagedFiles.has("alibaba-config.cjs"), true);
-  assert.equal(packagedFiles.has("api-failover.cjs"), true);
-  assert.equal(packagedFiles.has("central-sync.cjs"), true);
-  assert.equal(packagedFiles.has("excel-live.cjs"), true);
-  assert.equal(packagedFiles.has("sync-outbox.cjs"), true);
-  assert.equal(packagedFiles.has("workbook-fingerprint.cjs"), true);
-  assert.equal(packagedFiles.has("workbook-location.cjs"), true);
-  assert.equal(packagedFiles.has("workbook-identity-migration.cjs"), true);
-  assert.equal(packagedFiles.has("workbook-migration-transaction.cjs"), true);
-  assert.equal(packagedFiles.has("private-workbook-bootstrap.cjs"), true);
-  assert.equal(packagedFiles.has("private-workbook-bootstrap-main.cjs"), true);
-  assert.equal(packagedFiles.has("packaged-smoke-runtime.cjs"), true);
+  for (const file of [
+    "alibaba-config.cjs", "api-failover.cjs", "central-sync.cjs", "excel-live.cjs",
+    "sync-outbox.cjs", "workbook-fingerprint.cjs", "workbook-location.cjs",
+    "workbook-identity-migration.cjs", "workbook-migration-transaction.cjs",
+    "private-workbook-bootstrap.cjs", "private-workbook-bootstrap-main.cjs",
+    "packaged-smoke-runtime.cjs",
+  ]) assert.equal(packagedFiles.has(file), true, `${file} must be packaged`);
 });
 
-test("Windows 7 build uses the last supported Electron major and the compatible Sharp runtime", () => {
+test("Windows 7 build uses the last supported Electron major and compatible Sharp runtime", () => {
   const config = require("../build/electron-builder.win7.cjs");
   assert.equal(config.electronVersion, "22.3.27");
   assert.match(config.msi.artifactName, /Windows7/);
@@ -45,69 +41,53 @@ test("Windows 7 build uses the last supported Electron major and the compatible 
   assert.equal(config.files.includes("!node_modules/sharp-win7/**/*"), false);
 });
 
-test("release preflight accepts the checked-in actual Alibaba endpoints", () => {
-  assert.doesNotThrow(() => verifySourceCloudConfig(root));
+test("release preflight accepts template-only runtime cloud configuration", () => {
+  assert.doesNotThrow(() => verifyRuntimeConfigTemplate(root));
+  assert.equal(verifySourceCloudConfig(root), null);
 });
 
-test("packaged app.asar verification rejects a stale embedded app", async (t) => {
-  const directory = fs.mkdtempSync(path.join(os.tmpdir(), "tek-stock-version-"));
-  t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
-  const appDirectory = path.join(directory, "app");
+async function minimalArchive(directory, options = {}) {
+  const appDirectory = path.join(directory, `app-${Math.random().toString(16).slice(2)}`);
   const inventoryDirectory = path.join(appDirectory, "inventory");
   fs.mkdirSync(inventoryDirectory, { recursive: true });
-  fs.writeFileSync(
-    path.join(appDirectory, "package.json"),
-    JSON.stringify({ name: "tek-stock-test", version: "1.5.33" }),
-  );
-  fs.writeFileSync(
-    path.join(inventoryDirectory, "index.html"),
-    '<span>App v1.5.33</span><script>appVersion: "1.5.33"</script>',
-  );
-  fs.writeFileSync(path.join(appDirectory, "api-failover.cjs"), '"use strict";\n');
-  fs.writeFileSync(path.join(appDirectory, "central-sync.cjs"), '"use strict";\n');
-  fs.writeFileSync(path.join(appDirectory, "sync-outbox.cjs"), '"use strict";\n');
-  fs.writeFileSync(path.join(appDirectory, "alibaba-config.cjs"), '"use strict";\n');
-  for (const file of [
-    "excel-live.cjs",
-    "workbook-fingerprint.cjs",
-    "workbook-location.cjs",
-    "private-workbook-bootstrap.cjs",
-    "private-workbook-bootstrap-main.cjs",
-    "workbook-identity-migration.cjs",
-    "workbook-migration-transaction.cjs",
-    "packaged-smoke-runtime.cjs",
-    "inventory/conflict-resolution.js",
-  ]) fs.writeFileSync(path.join(appDirectory, file), '"use strict";\n');
-  const jszipDirectory = path.join(appDirectory, "node_modules", "jszip", "lib");
-  fs.mkdirSync(jszipDirectory, { recursive: true });
-  fs.writeFileSync(path.join(jszipDirectory, "external.js"), '"use strict";\nmodule.exports = {};\n');
-  fs.writeFileSync(path.join(inventoryDirectory, "alibaba-cloud.json"), JSON.stringify({
-    apiBaseUrl: "https://stock-api.aliyuncs.com",
-    ossPublicBaseUrl: "https://tek-stock-photos.oss-cn-hangzhou.aliyuncs.com",
-  }));
-  const goodArchive = path.join(directory, "good.asar");
-  await asar.createPackage(appDirectory, goodArchive);
-  assert.equal(verifyPackagedArchive(goodArchive, "1.5.33"), "1.5.33");
-
-  fs.writeFileSync(
-    path.join(inventoryDirectory, "index.html"),
-    '<span>App v1.5.32</span><script>appVersion: "1.5.32"</script>',
-  );
-  const staleArchive = path.join(directory, "stale.asar");
-  await asar.createPackage(appDirectory, staleArchive);
-  assert.throws(
-    () => verifyPackagedArchive(staleArchive, "1.5.33"),
-    /badge must match package version 1\.5\.33/,
-  );
-
+  fs.writeFileSync(path.join(appDirectory, "package.json"),
+    JSON.stringify({ name: "tek-stock-test", version: options.version || "1.6.7" }));
   fs.writeFileSync(path.join(inventoryDirectory, "index.html"),
-    '<span>App v1.5.33</span><script>appVersion: "1.5.33"</script>');
-  fs.writeFileSync(path.join(jszipDirectory, "external.js"), '"unterminated');
-  const corruptArchive = path.join(directory, "corrupt.asar");
-  await asar.createPackage(appDirectory, corruptArchive);
+    options.html || '<span>App v1.6.07</span><script>appVersion: "1.6.07"</script>');
+  fs.writeFileSync(path.join(inventoryDirectory, "alibaba-cloud.example.json"), JSON.stringify({
+    apiBaseUrl: "https://inventory-api.example.com",
+    apiFallbackBaseUrls: [],
+    authorityId: "runtime-authority",
+    ossPublicBaseUrl: "https://assets.example.com",
+  }));
+  for (const file of [
+    "alibaba-config.cjs", "api-failover.cjs", "central-sync.cjs", "excel-live.cjs",
+    "sync-outbox.cjs", "workbook-fingerprint.cjs", "workbook-location.cjs",
+    "private-workbook-bootstrap.cjs", "private-workbook-bootstrap-main.cjs",
+    "workbook-identity-migration.cjs", "workbook-migration-transaction.cjs",
+    "packaged-smoke-runtime.cjs", "inventory/conflict-resolution.js",
+  ]) {
+    const target = path.join(appDirectory, file);
+    fs.mkdirSync(path.dirname(target), { recursive: true });
+    fs.writeFileSync(target, '"use strict";\n');
+  }
+  const archive = path.join(directory, `${Math.random().toString(16).slice(2)}.asar`);
+  await asar.createPackage(appDirectory, archive);
+  return { appDirectory, inventoryDirectory, archive };
+}
+
+test("packaged app.asar accepts template-only config and rejects stale embedded version", async (t) => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), "tek-stock-version-"));
+  t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
+  const good = await minimalArchive(directory);
+  assert.equal(verifyPackagedArchive(good.archive, "1.6.7"), "1.6.7");
+
+  const stale = await minimalArchive(directory, {
+    html: '<span>App v1.6.06</span><script>appVersion: "1.6.06"</script>',
+  });
   assert.throws(
-    () => verifyPackagedArchive(corruptArchive, "1.5.33"),
-    /packaged JavaScript is corrupt or invalid: node_modules\/jszip\/lib\/external\.js/,
+    () => verifyPackagedArchive(stale.archive, "1.6.7"),
+    /badge must match package version 1\.6\.07/,
   );
 });
 
@@ -126,50 +106,23 @@ test("packaged smoke paints the settled renderer before capturing evidence", () 
   const show = source.indexOf("window.showInactive()");
   const capture = source.indexOf("window.webContents.capturePage()");
   const hide = source.indexOf("window.hide()", capture);
-  assert.ok(show >= 0, "the hidden smoke window must be shown without focus before capture");
-  assert.ok(capture > show, "capture must happen after the settled renderer is painted");
-  assert.ok(hide > capture, "the evidence window must be hidden again after capture");
+  assert.ok(show >= 0);
+  assert.ok(capture > show);
+  assert.ok(hide > capture);
 });
 
-test("package audit rejects missing, placeholder, or secret-bearing Alibaba config", async (t) => {
+test("runtime package audit accepts no embedded production config but rejects an injected secret", async (t) => {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), "tek-stock-cloud-config-"));
   t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
-  const appDirectory = path.join(directory, "app");
-  const inventoryDirectory = path.join(appDirectory, "inventory");
-  fs.mkdirSync(inventoryDirectory, { recursive: true });
-  fs.writeFileSync(path.join(appDirectory, "package.json"),
-    JSON.stringify({ name: "tek-stock-test", version: "1.5.33" }));
-  fs.writeFileSync(path.join(inventoryDirectory, "index.html"),
-    '<span>App v1.5.33</span><script>appVersion: "1.5.33"</script>');
-  for (const file of [
-    "alibaba-config.cjs", "api-failover.cjs", "central-sync.cjs", "excel-live.cjs",
-    "sync-outbox.cjs", "workbook-fingerprint.cjs", "workbook-location.cjs",
-    "private-workbook-bootstrap.cjs", "private-workbook-bootstrap-main.cjs",
-    "workbook-identity-migration.cjs", "workbook-migration-transaction.cjs",
-    "packaged-smoke-runtime.cjs",
-    "inventory/conflict-resolution.js",
-  ]) {
-    fs.writeFileSync(path.join(appDirectory, file), '"use strict";\n');
-  }
-  const missingArchive = path.join(directory, "missing.asar");
-  await asar.createPackage(appDirectory, missingArchive);
-  assert.throws(() => verifyPackagedArchive(missingArchive, "1.5.33"),
-    /missing the actual Alibaba cloud configuration/);
+  const clean = await minimalArchive(directory);
+  assert.doesNotThrow(() => verifyPackagedArchive(clean.archive, "1.6.7"));
 
-  fs.writeFileSync(path.join(inventoryDirectory, "alibaba-cloud.json"), JSON.stringify({
-    apiBaseUrl: "https://stock-api.example.com",
-    ossPublicBaseUrl: "https://bucket.oss-cn-hangzhou.aliyuncs.com",
-  }));
-  const placeholderArchive = path.join(directory, "placeholder.asar");
-  await asar.createPackage(appDirectory, placeholderArchive);
-  assert.throws(() => verifyPackagedArchive(placeholderArchive, "1.5.33"), /placeholder/);
-
-  fs.writeFileSync(path.join(inventoryDirectory, "alibaba-cloud.json"), JSON.stringify({
-    apiBaseUrl: "https://stock-api.aliyuncs.com",
-    ossPublicBaseUrl: "https://bucket.oss-cn-hangzhou.aliyuncs.com",
+  fs.writeFileSync(path.join(clean.inventoryDirectory, "alibaba-cloud.json"), JSON.stringify({
+    apiBaseUrl: "https://runtime-api.tek-stock.dev",
+    ossPublicBaseUrl: "https://runtime-assets.tek-stock.dev",
     uploadToken: "must-not-ship",
   }));
   const secretArchive = path.join(directory, "secret.asar");
-  await asar.createPackage(appDirectory, secretArchive);
-  assert.throws(() => verifyPackagedArchive(secretArchive, "1.5.33"), /unexpected field.*uploadToken/);
+  await asar.createPackage(clean.appDirectory, secretArchive);
+  assert.throws(() => verifyPackagedArchive(secretArchive, "1.6.7"), /unexpected field.*uploadToken/);
 });

@@ -17,6 +17,20 @@ function safeVersion(value) {
   return /^\d+\.\d+\.\d+(?:[-+][a-z0-9.-]+)?$/i.test(text) ? text.slice(0, 40) : "";
 }
 
+function compareVersions(left, right) {
+  const parse = (value) => {
+    const match = safeVersion(value).match(/^(\d+)\.(\d+)\.(\d+)/);
+    return match ? match.slice(1).map(Number) : null;
+  };
+  const a = parse(left);
+  const b = parse(right);
+  if (!a || !b) return 0;
+  for (let index = 0; index < 3; index += 1) {
+    if (a[index] !== b[index]) return a[index] > b[index] ? 1 : -1;
+  }
+  return 0;
+}
+
 function safeErrorCode(value) {
   const raw = String(value || "");
   if (/token|secret|password|authorization|cookie|email|phone/i.test(raw)) return "UPDATE_FAILED";
@@ -31,14 +45,24 @@ function sanitizeUpdateReceipt(input = {}, now) {
   const channel = ["windows7", "windows10"].includes(value.channel) ? value.channel : "";
   const source = ["hangzhou", "singapore", "other", "unknown"].includes(value.manifestSource)
     ? value.manifestSource : "";
+  const currentVersion = safeVersion(value.currentVersion);
+  let availableVersion = safeVersion(value.availableVersion);
+  const newerVersionFound = typeof value.newerVersionFound === "boolean"
+    ? value.newerVersionFound : null;
+  if (newerVersionFound === false
+      && currentVersion
+      && availableVersion
+      && compareVersions(availableVersion, currentVersion) < 0) {
+    availableVersion = currentVersion;
+  }
   return {
     schemaVersion: 1,
     timestamp: timestamp.toISOString(),
     action: ["check", "user_update", "user_reinstall"].includes(value.action) ? value.action : "check",
     checkRan: value.checkRan === true,
-    currentVersion: safeVersion(value.currentVersion),
-    availableVersion: safeVersion(value.availableVersion),
-    newerVersionFound: typeof value.newerVersionFound === "boolean" ? value.newerVersionFound : null,
+    currentVersion,
+    availableVersion,
+    newerVersionFound,
     installerFound: value.installerFound === true,
     downloadOutcome: outcome("downloadOutcome"),
     launchOutcome: outcome("launchOutcome"),

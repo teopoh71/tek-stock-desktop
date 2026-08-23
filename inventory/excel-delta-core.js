@@ -143,19 +143,18 @@
         && workbookMtimeMs > workbookWrittenAtMs
         && rows.every((row) => !cleanId(row?.id) || baselineIds.has(cleanId(row?.id)))) {
       const blankRow = blankModelRows[0];
-      const [missingId, missingBaseline] = missingBaselineRows[0];
+      const [, missingBaseline] = missingBaselineRows[0];
       const sourceRow = Math.trunc(Number(blankRow?.sourceRow) || 0);
       const baselineSourceRow = Math.trunc(Number(missingBaseline?.sourceRow) || 0);
-      const liveRecord = live.find((row) => cleanId(row?.id) === missingId);
-      // Canonical cloud/baseline records may intentionally omit sourceRow.
-      // In the strict one-missing/one-blank/count-stable case above, the
-      // one-to-one identity evidence is sufficient without a physical row
-      // locator. When a baseline row locator exists, still require it to
-      // match so a moved row cannot weaken the guard.
+      // Identity assignment and delete authorization are deliberately separate.
+      // This branch only proves that one baseline identity disappeared while
+      // one blank replacement row appeared in the same acknowledged workbook
+      // shape. The replacement always receives a fresh ID. Any concurrent
+      // cloud edit to the deleted identity is handled later by the three-way
+      // merge and can still block deletion atomically.
       if (sourceRow >= dataStartRow
           && (baselineSourceRow === 0 || sourceRow === baselineSourceRow)
-          && cleanText(blankRow?.model) !== cleanText(missingBaseline?.model)
-          && matchesBaselineRecord(liveRecord, missingBaseline)) {
+          && cleanText(blankRow?.model) !== cleanText(missingBaseline?.model)) {
         sameRowReplacement = blankRow;
       }
     }
@@ -169,11 +168,7 @@
         && Number.isFinite(workbookMtimeMs)
         && workbookMtimeMs > workbookWrittenAtMs
         && rows.every((row) => !cleanId(row?.id) || baselineIds.has(cleanId(row?.id)))) {
-      const [missingId, missingBaseline] = missingBaselineRows[0];
-      const liveRecord = live.find((row) => cleanId(row?.id) === missingId);
-      if (matchesBaselineRecord(liveRecord, missingBaseline)) {
-        blankModelRows.forEach((row) => verifiedDeleteAndTwoAddRows.add(row));
-      }
+      blankModelRows.forEach((row) => verifiedDeleteAndTwoAddRows.add(row));
     }
     for (const duplicate of duplicateConflicts(rows, options.allowedLegacyIds)
       .filter((conflict) => conflict.reason === "duplicate-id")) {

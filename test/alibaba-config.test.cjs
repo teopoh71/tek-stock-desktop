@@ -92,3 +92,26 @@ test("endpoint overrides remain available when no valid packaged config exists",
     ossPublicBaseUrl: userConfig.ossPublicBaseUrl,
   });
 });
+
+test("packaged primary keeps trusted support fallbacks for the same authority", (t) => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), "tek-alibaba-support-fallback-"));
+  t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
+  const packagedConfigPath = path.join(directory, "packaged-alibaba-cloud.json");
+  fs.writeFileSync(packagedConfigPath, JSON.stringify({
+    ...actualConfig,
+    apiFallbackBaseUrls: [],
+  }));
+  fs.writeFileSync(path.join(directory, "alibaba-cloud.json"), JSON.stringify({
+    apiBaseUrl: "https://ignored-user-primary.aliyuncs.com",
+    apiFallbackBaseUrls: ["https://support-fallback.aliyuncs.com"],
+    authorityId: actualConfig.authorityId,
+    ossPublicBaseUrl: "https://ignored-user-photos.oss-cn-hangzhou.aliyuncs.com",
+  }));
+
+  const result = readAlibabaCloudConfigFiles({
+    userDataPath: directory, packagedConfigPath, env: {},
+  });
+  assert.equal(result.apiBaseUrl, actualConfig.apiBaseUrl);
+  assert.equal(result.authorityId, actualConfig.authorityId);
+  assert.deepEqual(result.apiFallbackBaseUrls, ["https://support-fallback.aliyuncs.com"]);
+});

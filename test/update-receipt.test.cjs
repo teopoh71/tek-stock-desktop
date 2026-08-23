@@ -36,6 +36,24 @@ test("update receipt records a successful check without installer side effects",
   assert.equal(result.launchOutcome, "not_requested");
 });
 
+test("stale lower manifest versions are not presented as available updates", () => {
+  const receipt = sanitizeUpdateReceipt({
+    action: "check",
+    checkRan: true,
+    currentVersion: "1.6.6",
+    availableVersion: "1.5.51",
+    newerVersionFound: false,
+    installerFound: true,
+    downloadOutcome: "not_requested",
+    launchOutcome: "not_requested",
+    channel: "windows10",
+    manifestSource: "singapore",
+  }, new Date("2026-08-23T05:00:00.000Z"));
+  assert.equal(receipt.currentVersion, "1.6.6");
+  assert.equal(receipt.availableVersion, "1.6.6");
+  assert.equal(receipt.newerVersionFound, false);
+});
+
 test("update receipt keeps concrete safe errors and removes suspicious text", () => {
   const safe = sanitizeUpdateReceipt({
     action: "check",

@@ -19,7 +19,8 @@ function normalizeEndpoint(value, name, allowMissing) {
   if (!text && allowMissing) return "";
   let url;
   try { url = new URL(text); } catch { throw configError(`${name} must be an HTTPS URL`); }
-  if (url.protocol !== "https:" || url.username || url.password || url.search || url.hash) {
+  if (url.protocol !== "https:"
+      && !(options.allowHttp === true && url.protocol === "http:")) {
     throw configError(`${name} must be a credential-free HTTPS URL`);
   }
   const host = url.hostname.toLowerCase();
@@ -100,14 +101,32 @@ function readAlibabaCloudConfigFiles(options = {}) {
   const packagedConfig = readConfig(String(options.packagedConfigPath || ""));
   const env = options.env || process.env;
   const usePackagedApi = Boolean(packagedConfig.apiBaseUrl);
+  const packagedAuthorityId = String(packagedConfig.authorityId || "").trim();
+  const userSupportFallbacks = usePackagedApi
+    && packagedAuthorityId
+    && String(userConfig.authorityId || "").trim() === packagedAuthorityId
+    ? userConfig.apiFallbackBaseUrls || []
+    : [];
+  const envAuthorityId = String(env.TEK_STOCK_AUTHORITY_ID || "").trim();
+  const envSupportFallbacks = usePackagedApi
+    && packagedAuthorityId
+    && envAuthorityId === packagedAuthorityId
+    ? environmentFallbacks(env.TEK_STOCK_API_FALLBACK_BASE_URLS)
+    : [];
   return validateAlibabaCloudConfig({
     // Packaged endpoints are release-audited and keep every installation on the
-    // same inventory and photo store. Preserve user/environment overrides as
-    // fallback inputs when no valid packaged configuration is present.
+    // same inventory and photo store. Preserve user/environment primary and
+    // photo overrides only when no valid packaged configuration is present.
+    // Trusted same-authority fallback endpoints remain available as an
+    // emergency recovery path when a packaged primary becomes unreachable.
     apiBaseUrl: String(packagedConfig.apiBaseUrl
       || env.TEK_STOCK_API_BASE_URL || userConfig.apiBaseUrl || "").trim(),
     apiFallbackBaseUrls: usePackagedApi
-      ? packagedConfig.apiFallbackBaseUrls
+      ? [
+        ...(packagedConfig.apiFallbackBaseUrls || []),
+        ...envSupportFallbacks,
+        ...userSupportFallbacks,
+      ]
       : environmentFallbacks(env.TEK_STOCK_API_FALLBACK_BASE_URLS).length
         ? environmentFallbacks(env.TEK_STOCK_API_FALLBACK_BASE_URLS)
         : userConfig.apiFallbackBaseUrls,

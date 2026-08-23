@@ -1,0 +1,47 @@
+name: Verify Windows installer
+
+on:
+  push:
+    branches:
+      - fix/workbook-delete-replace-merge
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test-and-build:
+    runs-on: windows-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Delete-row regression tests
+        run: node --test test/workbook-delete-replace-merge.test.cjs
+      - name: Full test suite
+        run: npm test
+      - name: Build Windows NSIS installer
+        run: npm run dist:update
+      - name: Verify installer exists
+        shell: pwsh
+        run: |
+          $installer = Get-ChildItem dist-update -Filter *.exe -File | Select-Object -First 1
+          if (-not $installer) { throw 'Windows installer artifact not found' }
+          $hash = (Get-FileHash $installer.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+          "installer=$($installer.FullName)" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          "sha256=$hash" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+      - name: Upload verified installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: tek-stock-windows-installer
+          path: dist-update/*.exe
+          if-no-files-found: error
+          retention-days: 14

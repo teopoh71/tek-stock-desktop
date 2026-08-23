@@ -13,7 +13,7 @@ function readProductFeatureAttributes(msi) {
   const script = [
     "$installer = New-Object -ComObject WindowsInstaller.Installer",
     `$database = $installer.GetType().InvokeMember('OpenDatabase','InvokeMethod',$null,$installer,@(${msiLiteral},0))`,
-    "$view = $database.GetType().InvokeMember('OpenView','InvokeMethod',$null,$installer,@(\"SELECT `Attributes` FROM `Feature` WHERE `Feature`='ProductFeature'\"))",
+    "$view = $database.GetType().InvokeMember('OpenView','InvokeMethod',$null,$database,@(\"SELECT `Attributes` FROM `Feature` WHERE `Feature`='ProductFeature'\"))",
     "$view.GetType().InvokeMember('Execute','InvokeMethod',$null,$view,$null) | Out-Null",
     "$record = $view.GetType().InvokeMember('Fetch','InvokeMethod',$null,$view,$null)",
     "$record.GetType().InvokeMember('IntegerData','GetProperty',$null,$record,@(1))",

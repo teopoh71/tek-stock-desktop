@@ -33,6 +33,11 @@ function isVersionNewer(candidate, current) {
   return false;
 }
 
+function currentVersionFromUserAgent(value) {
+  const match = String(value || "").match(/\bTEK-STOCK\/v?(\d+\.\d+\.\d+(?:[-+][a-z0-9.-]+)?)/i);
+  return match ? match[1] : "";
+}
+
 function requireHttpsUrl(value, code = "UPDATE_URL_INVALID") {
   let parsed;
   try {
@@ -210,6 +215,11 @@ async function fetchReleaseManifest(url = DEFAULT_MANIFEST_URL, options = {}) {
 }
 
 async function downloadVerifiedInstaller(release, destination, options = {}) {
+  const installedVersion = currentVersionFromUserAgent(options.userAgent);
+  const releaseVersion = String(release?.version || "").trim();
+  if (installedVersion && releaseVersion && isVersionNewer(installedVersion, releaseVersion)) {
+    throw updaterError("UPDATE_DOWNGRADE_BLOCKED", `${installedVersion} -> ${releaseVersion}`);
+  }
   const target = path.resolve(destination);
   const expectedSize = release.size;
   const maxBytes = options.maxBytes || MAX_INSTALLER_BYTES;

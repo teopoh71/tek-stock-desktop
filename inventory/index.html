@@ -1,0 +1,243 @@
+﻿<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#146c68">
+  <title>TEK STOCK 新加坡库存</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="styles.css?v=20260726-white-full-photo-v1">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="app-header">
+      <div class="brand-lockup">
+        <img class="brand-logo" src="assets/tek-stock-logo.png" alt="TEK STOCK">
+        <div>
+        <p class="eyebrow">HP SOFA · INVENTORY</p>
+        <h1>TEK STOCK 新加坡库存</h1>
+        </div>
+      </div>
+      <div class="header-actions">
+        <div class="version-badge" aria-label="Application and cloud versions">
+            <span>App v1.6.07</span>
+          <span id="cloudVersion">Cloud v0</span>
+          <span class="update-receipt" id="updateReceipt">Update check pending</span>
+        </div>
+        <button class="update-button" id="uploadButton" type="button" aria-label="Update" title="Update">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66M20 4v6h-6"/></svg>
+          <span>Update</span>
+        </button>
+        <button class="reinstall-button desktop-only" id="reinstallButton" type="button" aria-label="Reinstall TEK STOCK" title="Download, verify, and reinstall the latest TEK STOCK desktop app">Reinstall</button>
+        <button class="excel-button desktop-only" id="exportButton" type="button" aria-label="Export Excel" title="Export Excel">Excel</button>
+        <button class="reset-local-button desktop-only" id="resetLocalButton" type="button" aria-label="从云端重置本机" title="Discard local changes and rebuild this computer from live cloud">从云端重置本机</button>
+      </div>
+    </header>
+
+    <main>
+      <section class="summary-panel" aria-label="Stock summary">
+        <div class="summary-main">
+          <span>Total stock</span>
+          <strong id="totalStock">—</strong>
+          <small>pcs</small>
+        </div>
+        <div class="summary-grid">
+          <button class="summary-stat" data-filter="all" type="button"><strong id="totalModels">—</strong><span>Models</span></button>
+          <div class="summary-stat"><strong id="totalSold">0</strong><span>累計售出</span></div>
+          <button class="filter-button" data-filter="low" type="button">&#20302;&#24211;&#23384;</button>
+          <button class="filter-button" data-filter="out" type="button">&#32570;&#36135;</button>
+        </div>
+      </section>
+
+      <section class="control-panel">
+        <label class="search-box">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg>
+          <input id="searchInput" type="search" placeholder="&#25628;&#32034;&#22411;&#21495;&#12289;&#35268;&#26684;&#25110;&#35760;&#24405;" autocomplete="off">
+          <button id="clearSearch" type="button" aria-label="&#28165;&#38500;&#25628;&#32034;">X</button>
+        </label>
+        <div class="filter-row" id="stockFilters" aria-label="&#24211;&#23384;&#31579;&#36873;">
+          <button class="filter-button is-active" data-filter="all" type="button">&#20840;&#37096;</button>
+          <button class="filter-button" data-filter="available" type="button">&#26377;&#36135;</button>
+          <button class="filter-button" data-filter="low" type="button">&#20302;&#24211;&#23384;</button>
+          <button class="filter-button" data-filter="out" type="button">&#32570;&#36135;</button>
+        </div>
+        <div class="category-filter-line">
+          <div class="category-row" id="categoryFilters" aria-label="&#20998;&#31867;&#31579;&#36873;"></div>
+          <div class="sort-row" id="sortControls" aria-label="库存及加入时间排序">
+            <button class="sort-button" data-sort="desc" type="button" aria-label="库存从多到少" title="库存从多到少">↓</button>
+            <button class="sort-button" data-sort="asc" type="button" aria-label="库存从少到多" title="库存从少到多">↑</button>
+            <button class="sort-button sort-newest" data-sort="newest" type="button" aria-label="最新加入在前" title="最新加入在前">✦</button>
+          </div>
+        </div>
+      </section>
+
+      <div class="result-heading">
+        <div><span id="resultCount">-</span> &#20010;&#21697;&#39033;</div>
+      </div>
+
+      <section class="inventory-grid" id="inventoryGrid" aria-live="polite"></section>
+      <button class="load-more" id="loadMoreButton" type="button" hidden>Show more</button>
+      <div class="empty-state" id="emptyState" hidden>
+        <span>∅</span>
+        <strong>No items found</strong><p>Try another search or category.</p>
+      </div>
+    </main>
+  </div>
+
+  <dialog class="detail-dialog" id="detailDialog">
+    <div class="dialog-card">
+      <button class="dialog-close" id="dialogClose" type="button" aria-label="Close">×</button>
+      <img id="detailImage" alt="">
+      <div class="dialog-content">
+        <p class="detail-category" id="detailCategory"></p>
+        <h2 id="detailModel"></h2>
+        <div class="detail-stock-row">
+          <div><span>目前庫存</span><input class="stock-edit" id="detailStock" type="number" step="1" readonly></div>
+          <div><span>本次出貨變動</span><input class="stock-edit sold-edit" id="detailSoldNow" type="number" step="1" value="0" readonly></div>
+          <div><span>累計售出</span><strong id="detailTotalSold">0</strong></div>
+        </div>
+        <dl class="detail-list">
+          <div><dt>Cost</dt><dd><input class="detail-edit" id="detailCost" data-edit-field="cost" inputmode="decimal"></dd></div>
+          <div><dt>Selling Price</dt><dd><input class="detail-edit" id="detailPrice" data-edit-field="sellingPriceText"></dd></div>
+          <div><dt>Spec</dt><dd><textarea class="detail-edit" id="detailSpec" data-edit-field="specification" rows="2"></textarea></dd></div>
+          <div><dt>Arrival</dt><dd><textarea class="detail-edit" id="detailArrival" data-edit-field="arrival" rows="2"></textarea></dd></div>
+          <div><dt>Showroom</dt><dd><textarea class="detail-edit" id="detailShowroom" data-edit-field="showroom" rows="2"></textarea></dd></div>
+          <div><dt>Outbound</dt><dd><textarea class="detail-edit" id="detailOutbound" data-edit-field="outbound" rows="3"></textarea></dd></div>
+        </dl>
+        <div class="detail-actions">
+          <button class="save-detail-button" id="saveDetailButton" type="button">Save</button>
+          <button class="reset-detail-button" id="resetDetailButton" type="button">Reset</button>
+          <button class="change-photo-button" id="changePhotoButton" type="button">更換照片</button>
+          <button class="feedback-button" id="feedbackButton" type="button">反馈照片问题</button>
+        </div>
+        <p class="source-note" id="detailSource"></p>
+      </div>
+    </div>
+  </dialog>
+
+
+
+  <dialog class="image-preview-dialog" id="imagePreviewDialog">
+    <button class="dialog-close image-preview-close" id="imagePreviewClose" type="button" aria-label="Close">X</button>
+    <img id="imagePreview" alt="Product photo">
+  </dialog>
+
+  <dialog class="feedback-dialog" id="feedbackDialog">
+    <div class="feedback-card">
+      <button class="dialog-close" id="feedbackClose" type="button" aria-label="Close">×</button>
+      <p class="detail-category">照片问题反馈</p>
+      <h2 id="feedbackModel"></h2>
+      <label class="feedback-field">
+        <span>问题说明</span>
+        <textarea id="feedbackMessage" rows="3" placeholder="例如：图片角度不对、缺少椅脚、仍有旧背景"></textarea>
+      </label>
+      <label class="feedback-upload" for="feedbackScreenshot">
+        <span>上传截图</span>
+        <input id="feedbackScreenshot" type="file" accept="image/*" capture="environment">
+      </label>
+      <img id="feedbackPreview" alt="截图预览" hidden>
+      <button class="feedback-submit" id="feedbackSubmit" type="button">提交问题</button>
+    </div>
+  </dialog>
+
+  <button class="help-fab" id="helpButton" type="button" aria-label="Help">?</button>
+  <dialog class="help-dialog" id="helpDialog">
+    <div class="help-card">
+      <button class="dialog-close" id="helpClose" type="button" aria-label="Close">?</button>
+      <p class="detail-category">Help</p>
+      <h2>Stock sync and backup</h2>
+      <dl class="detail-list">
+        <div><dt>Cloud data</dt><dd id="helpDataLocation">Alibaba Central API.</dd></div>
+        <div><dt>Phone app</dt><dd>Phone app is read-only. It updates from cloud when opened or when pressing Update.</dd></div>
+        <div><dt>照片反馈</dt><dd>打开品项后按“反馈照片问题”，上传截图和说明。</dd></div>
+        <div><dt>Desktop app</dt><dd>桌面 APP 与 TEK-STOCK-LIVE.xlsx 双向同步；APP 或 Excel 修改后都会更新另一边及手机云端。新电脑第一次上传修改时会要求输入同步密钥，并使用 Windows 加密保存。</dd></div>
+      </dl>
+    </div>
+  </dialog>
+
+  <dialog class="sync-token-dialog" id="syncTokenDialog" aria-labelledby="syncTokenTitle">
+    <form class="sync-token-card" method="dialog">
+      <h2 id="syncTokenTitle">连接云端同步</h2>
+      <p>这台电脑第一次上传修改，请输入 TEK STOCK 同步密钥。</p>
+      <label for="syncTokenInput">同步密钥</label>
+      <input id="syncTokenInput" type="password" autocomplete="off" spellcheck="false">
+      <div class="sync-token-actions">
+        <button type="submit" value="cancel">取消</button>
+        <button class="sync-token-save" type="submit" value="confirm">安全保存</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog class="sync-token-dialog" id="resetLocalDialog" aria-labelledby="resetLocalTitle">
+    <form class="sync-token-card" method="dialog">
+      <h2 id="resetLocalTitle">从云端重置本机</h2>
+      <p>这会先备份本机文件，再用当前实时云端库存替换这台电脑的 TEK-STOCK-LIVE.xlsx。</p>
+      <p class="identity-migration-warning">确认后，当前实时云端快照是唯一标准；本机 APP/Excel 内容、未同步修改、待同步和冲突状态都会在备份后丢弃并按云端重建。云端资料和其他电脑不会改变。</p>
+      <p id="resetLocalLiveState"></p>
+      <div class="sync-token-actions">
+        <button type="submit" value="cancel">取消</button>
+        <button class="sync-token-save" id="resetLocalConfirm" type="submit" value="confirm">备份并重置本机</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog class="sync-token-dialog" id="syncConflictDialog" aria-labelledby="syncConflictTitle">
+    <form class="sync-token-card" method="dialog">
+      <p id="syncConflictProgress"></p>
+      <h2 id="syncConflictTitle">同步冲突</h2>
+      <dl class="detail-list">
+        <div><dt>型号</dt><dd id="syncConflictModel"></dd></div>
+        <div><dt>字段</dt><dd id="syncConflictField"></dd></div>
+        <div><dt>Excel</dt><dd id="syncConflictExcel"></dd></div>
+        <div><dt>云端</dt><dd id="syncConflictCloud"></dd></div>
+      </dl>
+      <div class="sync-token-actions">
+        <button type="submit" value="keep-excel">保留 Excel</button>
+        <button class="sync-token-save" type="submit" value="keep-cloud">保留云端</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog class="sync-token-dialog identity-migration-dialog" id="identityMigrationDialog" aria-labelledby="identityMigrationTitle">
+    <form class="sync-token-card" method="dialog">
+      <h2 id="identityMigrationTitle">安全连接旧 Excel 行</h2>
+      <p>这些旧行缺少永久 ID。请逐行选择它在云端对应的产品；未确认前不会写入 Excel 或云端。</p>
+      <div class="identity-migration-rows" id="identityMigrationRows"></div>
+      <p class="identity-migration-warning" id="identityMigrationWarning" hidden></p>
+      <div class="sync-token-actions">
+        <button type="submit" value="cancel">取消</button>
+        <button class="sync-token-save" id="identityMigrationApply" type="submit" value="apply">确认连接并同步</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div class="toast" id="toast" role="status"></div>
+  <input id="uploadInput" type="file" accept=".json,application/json" hidden>
+  <input id="detailPhotoInput" type="file" accept="image/*" hidden>
+  <script>
+    window.INVENTORY_REMOTE_CONFIG = {
+      dataUrl: "",
+      readMirrorUrls: [],
+      uploadUrl: "",
+      imageUploadUrl: "",
+      feedbackUrl: "",
+      diagnosticsUrl: "",
+      uploadToken: "",
+      feedbackToken: "",
+        appVersion: "1.6.07",
+      readOnly: false,
+      deploymentNote: "Alibaba Function Compute + Tablestore authority; OSS photos and installers"
+    };
+  </script>
+  <script src="excel-sync-core.js?v=20260731-photo-merge-v2"></script>
+  <script src="excel-open-core.js?v=20260729-excel-open-v1"></script>
+  <script src="excel-bootstrap-core.js?v=20260805-private-workbook-v1"></script>
+  <script src="image-display-core.js?v=20260729-broken-image-v1"></script>
+  <script src="remote-payload-safety.js?v=20260728-guard-v2"></script>
+  <script src="remote-read-core.js?v=20260731-revision-floor-v3"></script>
+  <script src="conflict-resolution.js?v=20260805-conflict-resolution-v1"></script>
+  <script src="filter-sort-core.js?v=20260807-photo-multifilter-v1"></script>
+  <script src="inventory-data.js?v=20260726-exact-photo-sync-v3"></script>
+  <script src="app.js?v=20260807-workbook-identity-v1"></script>
+</body>
+</html>

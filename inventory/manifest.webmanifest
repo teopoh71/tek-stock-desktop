@@ -1,0 +1,10 @@
+{
+  "name": "TEK STOCK",
+  "short_name": "Stock",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f3f1eb",
+  "theme_color": "#146c68",
+  "lang": "zh-Hant",
+  "icons": []
+}

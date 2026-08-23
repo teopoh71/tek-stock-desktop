@@ -1,0 +1,1263 @@
+{
+  "version": 1,
+  "purpose": "Approved photos only. Build must fail if an old file overwrites an approved image.",
+  "itemCount": 314,
+  "items": {
+    "中角桌和其它数量.xlsx::(新)中桌数量::2": {
+      "image": "assets/images/edited-0638b8257f375c.webp",
+      "sha256": "1a69236ddb5156f1172da7f7f14e080e8dabd0425d355262aacc5461fc3923a3"
+    },
+    "中角桌和其它数量.xlsx::(新)中桌数量::3": {
+      "image": "assets/images/edited-789885ef278423.webp",
+      "sha256": "70ad5b4e82fb82fb2d022e2f4247a7842781c3172ab9fd475c6fbf19cd2b29d8"
+    },
+    "中角桌和其它数量.xlsx::(新)中桌数量::4": {
+      "image": "assets/images/edited-ead1d6e357f07f.webp",
+      "sha256": "515d251aca274811ea6e08e2330b6fccac21f5e08f2c991e003a3651bb38cbb4"
+    },
+    "中角桌和其它数量.xlsx::(新)中桌数量::5": {
+      "image": "assets/images/edited-c0ad48d7ee576d.webp",
+      "sha256": "71c6670e4669748160f9d23e1283ef16035aae83c318869444f118531e36056d"
+    },
+    "中角桌和其它数量.xlsx::(新)中桌数量::6": {
+      "image": "assets/images/edited-6df9d7eac9423f.webp",
+      "sha256": "2ac43720d26d780168f57d1170c157bc83b6b1333aec6e706e87ac28c65b00b7"
+    },
+    "中角桌和其它数量.xlsx::(新)中桌数量::7": {
+      "image": "assets/images/edited-1b640513bba1cf.webp",
+      "sha256": "3f0695a179e4619ba73b3b935fb76312757d1b91785077b7a93ce82dd516ba39"
+    },
+    "中角桌和其它数量.xlsx::(新)中桌数量::8": {
+      "image": "assets/images/edited-2a7a51eba9d473.webp",
+      "sha256": "9f6c621bff2faa09e92bf7b348258d3e04f165b30677a4373a349cd63729ec6d"
+    },
+    "中角桌和其它数量.xlsx::(新)中桌数量::9": {
+      "image": "assets/images/edited-0c4bc384824134.webp",
+      "sha256": "84f5bb034c2adc58f2436a4be0f92ed20c84b855ffe4cc5654c273ec3e93bc5e"
+    },
+    "中角桌和其它数量.xlsx::(新)中桌数量::10": {
+      "image": "assets/images/edited-0ffe38dac74e7d.webp",
+      "sha256": "84f5bb034c2adc58f2436a4be0f92ed20c84b855ffe4cc5654c273ec3e93bc5e"
+    },
+    "中角桌和其它数量.xlsx::(新)中桌数量::11": {
+      "image": "assets/images/edited-d7cca2cc4830c9.webp",
+      "sha256": "cfc311f04323122bbfc355d430a37dbf25eb2ddc2d853a036a9ce7b1c8946216"
+    },
+    "中角桌和其它数量.xlsx::(新)中桌数量::12": {
+      "image": "assets/images/edited-e2965e5ac645fd.webp",
+      "sha256": "7b20413c9f3977a758aa3ed6c578d4c2a12f9437b5d6e9f6185cd2ced57a8e96"
+    },
+    "中角桌和其它数量.xlsx::(新)中桌数量::13": {
+      "image": "assets/images/edited-888e59c302aebf.webp",
+      "sha256": "7dde13480c631acace121a856fd085d3e9aca86bee40f28995e005aba22acc52"
+    },
+    "中角桌和其它数量.xlsx::(新)中桌数量::14": {
+      "image": "assets/images/edited-6d54e368d57847.webp",
+      "sha256": "fc23343f947d7db23d826a06367d2890e943f9600fd9cab55e916632f9b9887c"
+    },
+    "中角桌和其它数量.xlsx::(新)中桌数量::15": {
+      "image": "assets/images/edited-4ae4f20de5989b.webp",
+      "sha256": "94e64fc3e849fa28df13d152570fb89cbade3ba55f9a4080dadef450662140da"
+    },
+    "中角桌和其它数量.xlsx::(新)中桌数量::16": {
+      "image": "assets/images/edited-7423cb57cfc47f.webp",
+      "sha256": "617f5db9a7d8f4db74444cedbb46e8ed183afecaba4ede6fb335b8371aa35a85"
+    },
+    "中角桌和其它数量.xlsx::(新)中桌数量::17": {
+      "image": "assets/images/edited-c4bf2239ddf466.webp",
+      "sha256": "7100e4092529b5df114f62289cc6eb5e482fa03c82686b143ff03bbbf4b82775"
+    },
+    "中角桌和其它数量.xlsx::(新)中桌数量::18": {
+      "image": "assets/images/edited-1dd890308cc960.webp",
+      "sha256": "0790287b8e5bb025628941a7f8ad969d2519ba85014d98f9a233c31550aaf6ab"
+    },
+    "中角桌和其它数量.xlsx::(新)中桌数量::19": {
+      "image": "assets/images/edited-ff78f25c7d3b64.webp",
+      "sha256": "1c769556525e35c8314722f5030564c24d6fe5fd491ec79bf1e582f15d3393bc"
+    },
+    "中角桌和其它数量.xlsx::(新)中桌数量::20": {
+      "image": "assets/images/edited-99c5a4b48a2bed.webp",
+      "sha256": "53e5775ecffbdfa4df41f6dcf75fa6b5aee4e67db5d3385d8a0242e29fa8e837"
+    },
+    "中角桌和其它数量.xlsx::(新)中桌数量::21": {
+      "image": "assets/images/edited-0f46dcf8ffffd8.webp",
+      "sha256": "91e6abc478813199d0d790673e63c368c4cecd045e96a8f501ec56feb607b4a3"
+    },
+    "中角桌和其它数量.xlsx::(新)中桌数量::22": {
+      "image": "assets/images/edited-b30601c51242eb.webp",
+      "sha256": "78657c64788e157ae49f3b599365a895bb0e4c907c50c828fda2d2edeb9fe156"
+    },
+    "中角桌和其它数量.xlsx::(新)中桌数量::23": {
+      "image": "assets/images/edited-53ad74cc1ce7e5.webp",
+      "sha256": "84219e5da51de5b64d3778ade837810c7023c3037aab3f3049f01a813f82f366"
+    },
+    "中角桌和其它数量.xlsx::(新)中桌数量::24": {
+      "image": "assets/images/edited-e577ea7c3e0495.webp",
+      "sha256": "cabf8c8d1b030b554d17c096afacd662ea2044e06cf4b25322d81dca40dc9384"
+    },
+    "中角桌和其它数量.xlsx::(新)中桌数量::25": {
+      "image": "assets/images/edited-34b6ab15101093.webp",
+      "sha256": "ae484113c49b000526c94e590ec850873e08d911c79dcc7a76e5885e666a2e38"
+    },
+    "中角桌和其它数量.xlsx::(新)中桌数量::26": {
+      "image": "assets/images/edited-7e99435adbde23.webp",
+      "sha256": "5f5621e8bd37c253a753878a89c360b5c09ebb2ad4903bdc900d813ad8616094"
+    },
+    "中角桌和其它数量.xlsx::(新)中桌数量::27": {
+      "image": "assets/images/edited-edec748f8ce4c9.webp",
+      "sha256": "a00adbd64971397e80c1a4dbd71420f126eba8d92aa527943ebf99a06901e561"
+    },
+    "中角桌和其它数量.xlsx::(新)中桌数量::28": {
+      "image": "assets/images/edited-d0dd3f2c3a9df0.webp",
+      "sha256": "1cd174834e5771fecf2669d32496c75911a1255631e0a9d2154ae03bb13a80b5"
+    },
+    "中角桌和其它数量.xlsx::(新)中桌数量::29": {
+      "image": "assets/images/edited-b510618587b4c7.webp",
+      "sha256": "94a0aa57f225fc41e3f1ec3647e2e4aa2864e3256cbf73b38bd5bcb7bbbbe420"
+    },
+    "中角桌和其它数量.xlsx::(新)中桌数量::30": {
+      "image": "assets/images/edited-d1be23d93aa2e4.webp",
+      "sha256": "f22a0ba2845e08a2046757bd30ff3a9c61a49c032ee92b25e386fff579e72a9a"
+    },
+    "中角桌和其它数量.xlsx::(新)中桌数量::31": {
+      "image": "assets/images/edited-2f6664430176ae.webp",
+      "sha256": "7b0e34f402b7d6aef8d8889c0c9f019ec6c7780628ffa357694918c41037a57e"
+    },
+    "中角桌和其它数量.xlsx::(新)中桌数量::32": {
+      "image": "assets/images/edited-0224eefcafa2e4.webp",
+      "sha256": "5afa22804c507601011c86d26a3c9aff31b84fc60e59ef2fc8c54a2f9fb39595"
+    },
+    "中角桌和其它数量.xlsx::(新)中桌数量::33": {
+      "image": "assets/images/edited-249049c36e8578.webp",
+      "sha256": "fb42dad5db31f9d6a0e4a5367a68bfafc6f4ee930508f7e17ba48b21ebbfffdc"
+    },
+    "中角桌和其它数量.xlsx::(新)中桌数量::34": {
+      "image": "assets/images/edited-9e541eb23ee08b.webp",
+      "sha256": "bd4ac2c59a5cfcee6e768899a7faa2389031938aafcd6fd2b9dbf5ba233a2160"
+    },
+    "中角桌和其它数量.xlsx::(新)中桌数量::35": {
+      "image": "assets/images/edited-e3358f232d49ac.webp",
+      "sha256": "f13d58ce2ee54b4bed561e077e03e91c8ac8ebea899989ae2020cf615110b6cf"
+    },
+    "中角桌和其它数量.xlsx::(新)中桌数量::36": {
+      "image": "assets/images/edited-db3601b2b94d2f.webp",
+      "sha256": "467d686df73f24cda84c29d49096898d408c59974aa4d8da9b68bf8469a5a0e8"
+    },
+    "中角桌和其它数量.xlsx::(新)中桌数量::37": {
+      "image": "assets/images/edited-2c51e77a270cfa.webp",
+      "sha256": "043d094b498160b53e8ef8d705b757f533d01d0c77a6cffe4b6c0757d7b95ab4"
+    },
+    "中角桌和其它数量.xlsx::(新)中桌数量::38": {
+      "image": "assets/images/edited-bccbee292de18d.webp",
+      "sha256": "b8415a4a79c1f8267ee9cbff2c158e2263a10ab53eac91e7fd2838b2265f1e85"
+    },
+    "中角桌和其它数量.xlsx::(新)中桌数量::39": {
+      "image": "assets/images/edited-a69f241cfcc1bb.webp",
+      "sha256": "fecff71cc475a6feb29c96a03b7bc8cf744ad9347f0063072b9df4f851d49597"
+    },
+    "中角桌和其它数量.xlsx::(新)中桌数量::40": {
+      "image": "assets/images/edited-eddcac1c2b74d0.webp",
+      "sha256": "f3468a2f7e9ac3e4ecc9e11a7fdbf1d3981d25a21379cf484675298d5aa8e5f4"
+    },
+    "中角桌和其它数量.xlsx::(新)中桌数量::41": {
+      "image": "assets/images/edited-2c3436c8806f2d.webp",
+      "sha256": "88d3cb074225f5674ee1ab0bd7672e29eaed1e877caf966ea2abfa51c1ede2ba"
+    },
+    "中角桌和其它数量.xlsx::(新)中桌数量::42": {
+      "image": "assets/images/edited-6b8ae63f7f4b8c.webp",
+      "sha256": "e775973f54300d44297756e0cfe21a2bd1f4869a68c11f5872b9f62fd75e2cbc"
+    },
+    "中角桌和其它数量.xlsx::(新)中桌数量::43": {
+      "image": "assets/images/edited-7950579a550815.webp",
+      "sha256": "3b96761dd41cba8d7512deee9cf87ed3766d84cdd7e95a0658871fec7ad2f6bd"
+    },
+    "中角桌和其它数量.xlsx::(新)中桌数量::44": {
+      "image": "assets/images/edited-fbbd24594655e9.webp",
+      "sha256": "650c3c3d93c48e85d331006e17d983ff5ef30539664b7176e2bddefd6052539c"
+    },
+    "中角桌和其它数量.xlsx::(新)中桌数量::45": {
+      "image": "assets/images/edited-ac5ce332e0d09a.webp",
+      "sha256": "a1ce4133f322b6190cafffd802a985e853dcdbcdd59cdcb0b06ecec53a1d5380"
+    },
+    "中角桌和其它数量.xlsx::(新)中桌数量::46": {
+      "image": "assets/images/edited-9627dfe2f44d20.webp",
+      "sha256": "c9d34221bbf8a7d9661cd4c61aa2748c873e3d7b33b7a61067c185742455c8ab"
+    },
+    "中角桌和其它数量.xlsx::(新)中桌数量::47": {
+      "image": "assets/images/edited-b6c003355fd7ee.webp",
+      "sha256": "d305344eb48a9946218be1789f8c38e833d8d19e0f17f4942bf71ca4a74811f0"
+    },
+    "中角桌和其它数量.xlsx::(新)中桌数量::49": {
+      "image": "assets/images/edited-d5cd4f755dec78.webp",
+      "sha256": "bed45e16a2669200b1e91c07876b782eecb85f020001122e1c55243e8ad3f649"
+    },
+    "中角桌和其它数量.xlsx::(新)中桌数量::50": {
+      "image": "assets/images/edited-4c27277e818883.webp",
+      "sha256": "48a7e06d360c8763f68dfa039522e032149bdb693d80d66327590581fe41f88c"
+    },
+    "中角桌和其它数量.xlsx::(新)中桌数量::51": {
+      "image": "assets/images/edited-136208798393b3.webp",
+      "sha256": "9c71555d44c42eb2050e1c81364594a01644ffa9dce336b40368e5ae9c72b3f8"
+    },
+    "中角桌和其它数量.xlsx::(新)中桌数量::52": {
+      "image": "assets/images/edited-52cfa8385a04bc.webp",
+      "sha256": "02ee5a9ac3b1aca58d73d2ca8ecc99312b4375722f17b895e6d94ff9339dad51"
+    },
+    "中角桌和其它数量.xlsx::(新)中桌数量::53": {
+      "image": "assets/images/edited-7ec3b1fa4a83d8.webp",
+      "sha256": "6ee369810ee5f9c322dc7019cb7c840ba583d0aafa4e11a6736f4888857cae7a"
+    },
+    "中角桌和其它数量.xlsx::(新)中桌数量::54": {
+      "image": "assets/images/edited-71e0e542e934e5.webp",
+      "sha256": "f44628a6c3fb67cbc5553b4d3ada5035626d326a087c63f57322b85dc8d8a310"
+    },
+    "中角桌和其它数量.xlsx::(新)中桌数量::55": {
+      "image": "assets/images/edited-dc75bc8f51c43b.webp",
+      "sha256": "372f5e58dd6c3fd09dc12727e231e7c07a16d99096b35f2d9034166953e22828"
+    },
+    "中角桌和其它数量.xlsx::(新)中桌数量::56": {
+      "image": "assets/images/edited-9768403c7a53a9.webp",
+      "sha256": "d6b99d41d7946b46558df419d9c4f06a1a5e2c6e6318fe7b39b185397274f599"
+    },
+    "中角桌和其它数量.xlsx::(新)中桌数量::57": {
+      "image": "assets/images/edited-aad99006bad78a.webp",
+      "sha256": "666becbc4b202fef732c8ef2e4e116d5f32933b4acb25dedee4cf36ce5733d20"
+    },
+    "中角桌和其它数量.xlsx::(新)中桌数量::58": {
+      "image": "assets/images/edited-6d4f04abb45c4d.webp",
+      "sha256": "bc76120643a6f7cc8aec2db9ca4fcc67b1163b72798fd9d721e67eaea8dd0f26"
+    },
+    "中角桌和其它数量.xlsx::(新)中桌数量::59": {
+      "image": "assets/images/edited-7b8d94195f6d97.webp",
+      "sha256": "870dfc311a6d824c0e7b3adb163bb9aead546c89f4efadd9b16cc9fea4dc692c"
+    },
+    "中角桌和其它数量.xlsx::(新)中桌数量::60": {
+      "image": "assets/images/edited-969f8fd5ec982d.webp",
+      "sha256": "1755985a270114b56ec2ecbb2b8eba2d03adaf6fd08d702a30a2ef6eef776fb4"
+    },
+    "中角桌和其它数量.xlsx::(新)中桌数量::61": {
+      "image": "assets/images/edited-a1bbe1ebce3c11.webp",
+      "sha256": "5ab94a1a90c88f85c296dd207ec6105476759cb6263635c3e2a6a52136e24f72"
+    },
+    "中角桌和其它数量.xlsx::(新)中桌数量::62": {
+      "image": "assets/images/edited-8d16d5cd4e5408.webp",
+      "sha256": "b301ccb5e483ff514cbb6637869e468e0908d0df7b86e5fe5b389d60b24f2f3d"
+    },
+    "中角桌和其它数量.xlsx::(新)中桌数量::63": {
+      "image": "assets/images/edited-8a8f39f0e5f147.webp",
+      "sha256": "b301ccb5e483ff514cbb6637869e468e0908d0df7b86e5fe5b389d60b24f2f3d"
+    },
+    "中角桌和其它数量.xlsx::(新)中桌数量::64": {
+      "image": "assets/images/edited-a78b722eb3c896.webp",
+      "sha256": "6631b9d308800a1d784c166b064b292d4aaffceca4b5dee441402851989e12e9"
+    },
+    "中角桌和其它数量.xlsx::(新)中桌数量::65": {
+      "image": "assets/images/edited-6fa00ef86a6506.webp",
+      "sha256": "b09a265dbeb7d1a7845aed83ce22de93118f61f07c023a8a2151072fda026b46"
+    },
+    "中角桌和其它数量.xlsx::(新)中桌数量::66": {
+      "image": "assets/images/edited-d324057ffa5d94.webp",
+      "sha256": "8125ac34c5a458be82880cb6c139d5599fb47f2220c07485e61c8b7cea2067b0"
+    },
+    "中角桌和其它数量.xlsx::(新)中桌数量::67": {
+      "image": "assets/images/edited-f0fb4f50aff245.webp",
+      "sha256": "485505740c3ed6e8a4f6ff045e82215ca00e8ea42a501fbe684dfcd9383e3c64"
+    },
+    "中角桌和其它数量.xlsx::(新)中桌数量::68": {
+      "image": "assets/images/edited-d15f418d0e11da.webp",
+      "sha256": "659a9c759b5884dd8f521e1bc0d5de63a3795a815d50c76ec3df36e1aef3ccca"
+    },
+    "中角桌和其它数量.xlsx::电视柜和床头箱::2": {
+      "image": "assets/images/edited-42a43e50804a58.webp",
+      "sha256": "21aae482956d70f8b74b2c99e502f26c69bcfdda6d83362726c98784c8749bbe"
+    },
+    "中角桌和其它数量.xlsx::电视柜和床头箱::3": {
+      "image": "assets/images/edited-2543899949abc4.webp",
+      "sha256": "910b6bf1b363872035bc221d1e1929db540230e71f1c7438fc3c846b88fbabc7"
+    },
+    "中角桌和其它数量.xlsx::电视柜和床头箱::4": {
+      "image": "assets/images/edited-cf4cd923517303.webp",
+      "sha256": "5a737ee3510a69cd5e7c79ec55885609aa066174aa2a22451ca6139dcb3c2177"
+    },
+    "中角桌和其它数量.xlsx::电视柜和床头箱::5": {
+      "image": "assets/images/edited-53bc33a4caea94.webp",
+      "sha256": "b8d9cda9383011b7b4f8977d43e31129c27fe5090d423ed966df1e4c371326b8"
+    },
+    "中角桌和其它数量.xlsx::电视柜和床头箱::7": {
+      "image": "assets/images/edited-2ada7366bc5629.webp",
+      "sha256": "932bc2079669ce294ff3b9aba0a86e49bdd85a4d581a0fb68b8ef328c7083c51"
+    },
+    "中角桌和其它数量.xlsx::电视柜和床头箱::8": {
+      "image": "assets/images/edited-c744b228f1cd63.webp",
+      "sha256": "8fa80389cb9e723d4cc231e44dad6791b45d3909586a91b8bf4759139a54c647"
+    },
+    "中角桌和其它数量.xlsx::电视柜和床头箱::9": {
+      "image": "assets/images/edited-7ff75c0390cad2.webp",
+      "sha256": "61902d1e1045f6ec1bff117c25e0d5a8be57268c7b25821baaaf99c973f2237c"
+    },
+    "中角桌和其它数量.xlsx::电视柜和床头箱::10": {
+      "image": "assets/images/edited-6a857503a17b49.webp",
+      "sha256": "798573c670dcff12d313c5cf6d19733f89047f04d1190b480de919704d7d6d70"
+    },
+    "中角桌和其它数量.xlsx::电视柜和床头箱::11": {
+      "image": "assets/images/edited-04230028b5214f.webp",
+      "sha256": "bb96b2395ebdf996edbbffc3b23d4b1a029396a36d6ebef10f1bb90edc9d0f06"
+    },
+    "中角桌和其它数量.xlsx::电视柜和床头箱::12": {
+      "image": "assets/images/edited-a67e043d4bd8da.webp",
+      "sha256": "0e34196bd65c54c8fd870cdbee76f23ccdd5e5e3347ddda2662227d95d84f57c"
+    },
+    "中角桌和其它数量.xlsx::电视柜和床头箱::13": {
+      "image": "assets/images/edited-bcba892b8564db.webp",
+      "sha256": "f8552c248529390a816c62c33dddc3f46ae27851eee15ea7150a8a553557a3ca"
+    },
+    "中角桌和其它数量.xlsx::忧闲椅和沙发床::2": {
+      "image": "assets/images/edited-6f279a975e55b1.webp",
+      "sha256": "d39f60ddfcf6b741311ced242833c4cd3d05fd43913aaee180adc18ec96a5762"
+    },
+    "中角桌和其它数量.xlsx::忧闲椅和沙发床::3": {
+      "image": "assets/images/edited-09111028444d84.webp",
+      "sha256": "42aa5da0ca1ce97c326a82394b9dd7caed1e2951a20d4188000505fa1aa4b769"
+    },
+    "中角桌和其它数量.xlsx::忧闲椅和沙发床::4": {
+      "image": "assets/images/edited-749b462508841f.webp",
+      "sha256": "9980cdb17bb3fc345b44983ae7743d2f0b1b30fa472bee783af468c582135a9f"
+    },
+    "中角桌和其它数量.xlsx::忧闲椅和沙发床::5": {
+      "image": "assets/images/edited-695fa0b2822214.webp",
+      "sha256": "ed5f982ef14707a49ea6d46f4f189e8a177870af7666cc759c07964e5265feab"
+    },
+    "中角桌和其它数量.xlsx::忧闲椅和沙发床::6": {
+      "image": "assets/images/edited-97fbfb3b741be8.webp",
+      "sha256": "3a9f24505400ca49d8c5ba5ab727233ae9a9119068c970bbf75678ab06e6a21b"
+    },
+    "中角桌和其它数量.xlsx::忧闲椅和沙发床::7": {
+      "image": "assets/images/edited-4e23d9d12863ce.webp",
+      "sha256": "333b11ab4b23ff45d15bc477c84150bf3f9cdf78229326ed7f7ef8cba0452bca"
+    },
+    "中角桌和其它数量.xlsx::忧闲椅和沙发床::8": {
+      "image": "assets/images/edited-7e2d8f2486d522.webp",
+      "sha256": "70082cb0a0743e8030560e986a646e82f70ab9de6e89e11830f6c17419e7c2ce"
+    },
+    "中角桌和其它数量.xlsx::忧闲椅和沙发床::9": {
+      "image": "assets/images/edited-b80a036fbec261.webp",
+      "sha256": "1dddcab85635f5a3b14d4b79d6b1505f5f3c35779a6711df3ef739ce146b3037"
+    },
+    "中角桌和其它数量.xlsx::忧闲椅和沙发床::11": {
+      "image": "assets/images/edited-e2cae2bdbc0d48.webp",
+      "sha256": "6e1866b9bc5a003d98a551c373fcc4cd2e830960b95eb1d6522ba4f7159ffdf6"
+    },
+    "中角桌和其它数量.xlsx::忧闲椅和沙发床::12": {
+      "image": "assets/images/edited-1607a3e84fdae1.webp",
+      "sha256": "2345c3ef211c37617b55daf37ebc058e68526ed9c58b0cb55c8969faa0cf2ff4"
+    },
+    "中角桌和其它数量.xlsx::忧闲椅和沙发床::13": {
+      "image": "assets/images/edited-3e522f40d7f1e7.webp",
+      "sha256": "786c7caebd71de7319913d5f4137ba9ed7960cab26ced5b9f283c1ca49c4b486"
+    },
+    "中角桌和其它数量.xlsx::忧闲椅和沙发床::14": {
+      "image": "assets/images/edited-7200a0bd867982.webp",
+      "sha256": "9cf23f80abb31fb1bdccd8d4a14bcad5324f7ca128d00bf9a7034d91508df34c"
+    },
+    "中角桌和其它数量.xlsx::忧闲椅和沙发床::15": {
+      "image": "assets/images/edited-1c51979a446fe0.webp",
+      "sha256": "76144562e33af56f60fa563cd55ca008621a729da7941f02d29767aa7f8461a5"
+    },
+    "中角桌和其它数量.xlsx::忧闲椅和沙发床::16": {
+      "image": "assets/images/edited-a9fb20064db28c.webp",
+      "sha256": "febbe9cecff7f07aa9adab3fbc46cd03bf2f0f792d02813a032f62cdcbab8bf3"
+    },
+    "中角桌和其它数量.xlsx::床袈::2": {
+      "image": "assets/images/edited-1f61eb486e30d2.webp",
+      "sha256": "a7870e86600bb99b8351353088b4f1431f94e8c07745b432b59b60a8fd9df040"
+    },
+    "中角桌和其它数量.xlsx::床袈::4": {
+      "image": "assets/images/edited-c676584448fb21.webp",
+      "sha256": "43ca174568b3b4cd0bfdaa9676a09e158b6ce54aab18c1d04ef7ec622f744fa8"
+    },
+    "中角桌和其它数量.xlsx::床袈::6": {
+      "image": "assets/images/edited-bb090008086149.webp",
+      "sha256": "d69fa9ff9c05ab2da9eaac5221efd348be3ae787837ec2c760689596b485672d"
+    },
+    "中角桌和其它数量.xlsx::床袈::9": {
+      "image": "assets/images/edited-25fb551319d1d4.webp",
+      "sha256": "64f9b09185f08a201c1d4f12bcc42117ff5324abaf86210583ed042c8dcf2b89"
+    },
+    "中角桌和其它数量.xlsx::床袈::10": {
+      "image": "assets/images/edited-6cbfb0b6bce072.webp",
+      "sha256": "48e528b2db614ce661ae994e873b4e8119af7bdcfa47ec5ec17774725b6be08b"
+    },
+    "中角桌和其它数量.xlsx::床袈::11": {
+      "image": "assets/images/edited-26281b01e30bdf.webp",
+      "sha256": "2fdf6158a7be1f45dcb29e259e326a0e72d9c0ba2dbacda9c0a88cf9134f22ea"
+    },
+    "中角桌和其它数量.xlsx::床袈::12": {
+      "image": "assets/images/edited-7bb605bd7cb1ce.webp",
+      "sha256": "faf73dd5ee418a1b99432637bf24ae2620987f4ce765c68264581c254e508cc6"
+    },
+    "中角桌和其它数量.xlsx::床袈::13": {
+      "image": "assets/images/edited-e052ac5acfffd5.webp",
+      "sha256": "faf73dd5ee418a1b99432637bf24ae2620987f4ce765c68264581c254e508cc6"
+    },
+    "中角桌和其它数量.xlsx::床袈::14": {
+      "image": "assets/images/edited-7343ac4c164d29.webp",
+      "sha256": "d53011f9244a04b1f9dc962886cb5bfb08320277505f2cd1338861565b7739b4"
+    },
+    "中角桌和其它数量.xlsx::BAR STOOL::2": {
+      "image": "assets/images/edited-3767588b275f3a.webp",
+      "sha256": "a61daac9b25f665682680e3bada469ec8212250c54ee877df7fbed2d4c31063d"
+    },
+    "中角桌和其它数量.xlsx::BAR STOOL::3": {
+      "image": "assets/images/edited-5d2947579e371a.webp",
+      "sha256": "31a2598ce463bf00f3694758207500058c28fd64732dc4174b200558e6875984"
+    },
+    "中角桌和其它数量.xlsx::BAR STOOL::4": {
+      "image": "assets/images/edited-dfbe75752ca808.webp",
+      "sha256": "8e8b535d4bf9b2f0f8f3eb012c3bec58f0658cb455d874ca97da02766c3ae042"
+    },
+    "中角桌和其它数量.xlsx::BAR STOOL::5": {
+      "image": "assets/images/edited-0601b87ba0d198.webp",
+      "sha256": "93499741288a852a788e2510eebe78bedfc4c89b44c70f3227788cd567699025"
+    },
+    "中角桌和其它数量.xlsx::BAR STOOL::6": {
+      "image": "assets/images/edited-e4ec866a1c80e1.webp",
+      "sha256": "264cb36174313d0e01de5a846c541ddef186597c3fc17e6cb5f207aa31132437"
+    },
+    "中角桌和其它数量.xlsx::(旧)中桌数量::2": {
+      "image": "assets/images/edited-d0d488cb585536.webp",
+      "sha256": "4ca47cc160352202e93c827f2f829bcd2287e28307af7e8ff3c5614ab8a730db"
+    },
+    "中角桌和其它数量.xlsx::(旧)中桌数量::3": {
+      "image": "assets/images/edited-2aebec6dfa51c9.webp",
+      "sha256": "81d49e554220defab12439f61d434ded410cb973f1c404fa8e64f5e967cad473"
+    },
+    "中角桌和其它数量.xlsx::(旧)中桌数量::4": {
+      "image": "assets/images/edited-b7c1723d1c99fe.webp",
+      "sha256": "30da55f7f7a3730238081598a889aee5f42a05e06d4893f9a33141ebf31a24c0"
+    },
+    "中角桌和其它数量.xlsx::(旧)中桌数量::5": {
+      "image": "assets/images/edited-ff6186ba5ac4c1.webp",
+      "sha256": "beb34b1465526d0194cbb6eeb4f4dc3b0e3cae92bcbfd5a7c8c0a138e9e0cee8"
+    },
+    "中角桌和其它数量.xlsx::(旧)中桌数量::6": {
+      "image": "assets/images/edited-83cc27e2e7ba4c.webp",
+      "sha256": "f14d2cf34b728505107c883a3d367b32e7c5fea5c4a19376af2f5f3f3381f19f"
+    },
+    "中角桌和其它数量.xlsx::(旧)中桌数量::7": {
+      "image": "assets/images/edited-abc6426c8571b2.webp",
+      "sha256": "e48ae932e1915ed3866353af627ad902709b982c19127224869d08c7cde8921d"
+    },
+    "中角桌和其它数量.xlsx::(旧)中桌数量::8": {
+      "image": "assets/images/edited-ca92a63e33127d.webp",
+      "sha256": "3ca892dd021f18ebcb351f4b8f2bc558e6a2efac6d34cbea150a048ae6f641bf"
+    },
+    "中角桌和其它数量.xlsx::(旧)中桌数量::9": {
+      "image": "assets/images/edited-7e1d0471fdc68f.webp",
+      "sha256": "6ca6ab60ab87760a7545f391f9af8ce2f640efc7287dab0a109def7758840391"
+    },
+    "中角桌和其它数量.xlsx::(旧)中桌数量::10": {
+      "image": "assets/images/edited-75326127631366.webp",
+      "sha256": "c380f5ff4177f9d53b0344e18991109d8ca7d038cc9b7b9e58340d0258890df2"
+    },
+    "中角桌和其它数量.xlsx::(旧)中桌数量::11": {
+      "image": "assets/images/edited-c0a7db050380f0.webp",
+      "sha256": "48b98c1e7b53ab9d00f702da96d46d7a7e45eca9959b60304291164d40ab7328"
+    },
+    "中角桌和其它数量.xlsx::(旧)中桌数量::12": {
+      "image": "assets/images/edited-bc53932fd0aec1.webp",
+      "sha256": "40c4c5b2dc91ff285a31ba357718f0e6149898ded3fc95cf36f68214b9d99581"
+    },
+    "中角桌和其它数量.xlsx::(旧)中桌数量::13": {
+      "image": "assets/images/edited-ef7c141895d31c.webp",
+      "sha256": "f52dbbe6888c62a33b27cc3801c73de65a365e2161e8c2cebb4c8ba834ff8f60"
+    },
+    "中角桌和其它数量.xlsx::(旧)中桌数量::14": {
+      "image": "assets/images/edited-4c0020f555e61b.webp",
+      "sha256": "f21acaf9356afcbe6025067b16d2c6fa423890b84264e75b610071edaf5d505e"
+    },
+    "中角桌和其它数量.xlsx::(旧)中桌数量::15": {
+      "image": "assets/images/edited-1184d9bce25862.webp",
+      "sha256": "22e757a0f1d79c33302c939850f3f03e2fa30786880e5f89eb657e13768c30b3"
+    },
+    "中角桌和其它数量.xlsx::(旧)中桌数量::16": {
+      "image": "assets/images/edited-16c92c2adf0259.webp",
+      "sha256": "e888b1d8f567b3e1b459ed3d61c9b0a1df4f41df4b03706ba1e0fa4a56f41a94"
+    },
+    "中角桌和其它数量.xlsx::(旧)中桌数量::17": {
+      "image": "assets/images/edited-d329f89a52591c.webp",
+      "sha256": "240deb6f2088dea10f61fdf507ea0b62804431f4f96541656355dea8b98ba22e"
+    },
+    "中角桌和其它数量.xlsx::(旧)中桌数量::18": {
+      "image": "assets/images/edited-c24759caec11fb.webp",
+      "sha256": "7ae4b50b95b6ff4ea5f7acae7f8ae3a53fbca8de1fd4ed5178a040691c919d20"
+    },
+    "中角桌和其它数量.xlsx::(旧)中桌数量::19": {
+      "image": "assets/images/edited-b1aa667e3af060.webp",
+      "sha256": "752b92c8259ca971675f59f544e9242e247de535365a91259b957b94552905fd"
+    },
+    "中角桌和其它数量.xlsx::(旧)中桌数量::20": {
+      "image": "assets/images/edited-e9847deee6984a.webp",
+      "sha256": "2f7f266554e5efb0138d0b9baf9e987cabb051807f787bcd48b0c185efed8a23"
+    },
+    "中角桌和其它数量.xlsx::(旧)中桌数量::21": {
+      "image": "assets/images/edited-cd95b48f0e8c6e.webp",
+      "sha256": "99951c8f55a6c9d804dca327df09ed4033c611788603ca47fdf5d3af210b54bf"
+    },
+    "中角桌和其它数量.xlsx::(旧)中桌数量::22": {
+      "image": "assets/images/edited-b3b8280be14c78.webp",
+      "sha256": "d5d7468965f9c4d848f558d43a17b56c748b64488470452007b6f0843c2590a6"
+    },
+    "中角桌和其它数量.xlsx::(旧)中桌数量::23": {
+      "image": "assets/images/edited-e6860596fea95a.webp",
+      "sha256": "6cf1465d4923cb43a76ff1ac2e15bec9659f493153cd644393af4341c1fe1f9c"
+    },
+    "中角桌和其它数量.xlsx::(旧)中桌数量::24": {
+      "image": "assets/images/edited-2021b97a0d6144.webp",
+      "sha256": "87e6ccdb876ceb9cd1ea3b62d54990a8b6b172178693756a10852d990e86478c"
+    },
+    "中角桌和其它数量.xlsx::(旧)中桌数量::26": {
+      "image": "assets/images/edited-0a95aca5227871.webp",
+      "sha256": "6d1609bc614e85c5cf2567557d4f5626a08470196aa53820c4afa3048565d2cd"
+    },
+    "中角桌和其它数量.xlsx::(旧)中桌数量::27": {
+      "image": "assets/images/edited-3fd42f74fb94fd.webp",
+      "sha256": "7ba86345e4ead516e514e214cc195c1401d35f7ce8d25008dadd99039683136d"
+    },
+    "中角桌和其它数量.xlsx::(旧)中桌数量::30": {
+      "image": "assets/images/edited-04e52ff54b2683.webp",
+      "sha256": "f5608d4cd4b2dc9ee2e2e6d17f1ccb5e1df6c49f07dfadc8f262214314ed7771"
+    },
+    "中角桌和其它数量.xlsx::(旧)中桌数量::31": {
+      "image": "assets/images/edited-7ceb10487a4840.webp",
+      "sha256": "d2b58da7ea716b04a5e9399ae56ef3cb1475e9eb20d442d71a63607cc883168c"
+    },
+    "中角桌和其它数量.xlsx::(旧)中桌数量::32": {
+      "image": "assets/images/edited-50047582a7cd44.webp",
+      "sha256": "7bf2698ce769ad8e330227c1c38c448388e8b4e627a2d241310d429d579f97ad"
+    },
+    "中角桌和其它数量.xlsx::(旧)中桌数量::33": {
+      "image": "assets/images/edited-fb1e706152421c.webp",
+      "sha256": "a4eb718eb3bedf1ce5890037d8437afa6299c0392adf926bb6f3bfe1105da008"
+    },
+    "中角桌和其它数量.xlsx::(旧)中桌数量::34": {
+      "image": "assets/images/edited-b82c204667aa6d.webp",
+      "sha256": "87fad8ce7aebdca05a6e618f61322a38d37a3e4c71d8ecfe348aac63da0996ee"
+    },
+    "中角桌和其它数量.xlsx::(旧)中桌数量::35": {
+      "image": "assets/images/edited-3dbe18d765ff69.webp",
+      "sha256": "e4166bff2896aab0039e6575eb817facef275b927a0a9f8298a888b75b321915"
+    },
+    "中角桌和其它数量.xlsx::(旧)中桌数量::36": {
+      "image": "assets/images/edited-028162b6619f0c.webp",
+      "sha256": "0a6f03bf548fac0b6a7431e7b0f51a424b38314036d106ca648b115148d023ed"
+    },
+    "中角桌和其它数量.xlsx::(旧)中桌数量::37": {
+      "image": "assets/images/edited-6adfd865061385.webp",
+      "sha256": "261bbd303bc9ea850eed642a7e810bc965f3cc4702df18018ff59130af8d26c0"
+    },
+    "中角桌和其它数量.xlsx::(旧)中桌数量::38": {
+      "image": "assets/images/edited-43b38e90b7bbe7.webp",
+      "sha256": "0d8155b122f658e1b3a30e6ce1d6fdf7b9604ded3dbe545ef74ebcfc04c29dbf"
+    },
+    "中角桌和其它数量.xlsx::(旧)中桌数量::39": {
+      "image": "assets/images/edited-027c40ebbfe382.webp",
+      "sha256": "ffca39760da2a3cd7b9191c0c97723578aee4446e90ae74d07c3344ca02f3ef1"
+    },
+    "中角桌和其它数量.xlsx::(旧)中桌数量::40": {
+      "image": "assets/images/edited-7dac7d782d62e6.webp",
+      "sha256": "a8035818686b2afd255086170d50e4a0df5331a9768e526f063ddef423f39619"
+    },
+    "中角桌和其它数量.xlsx::(旧)中桌数量::41": {
+      "image": "assets/images/edited-0c57a6c803a4bc.webp",
+      "sha256": "81d353462a72be792da1d804e49671ad38ada75b5164dd124f41ff8d06b7f23a"
+    },
+    "中角桌和其它数量.xlsx::(旧)中桌数量::42": {
+      "image": "assets/images/edited-69406958ebaa04.webp",
+      "sha256": "b0a5ee161b2dfc100b97d6b3539aa3fcd6215da47e9f3a19361a07c0b11fec47"
+    },
+    "中角桌和其它数量.xlsx::(旧)中桌数量::43": {
+      "image": "assets/images/edited-12a0ac313e4845.webp",
+      "sha256": "b0a5ee161b2dfc100b97d6b3539aa3fcd6215da47e9f3a19361a07c0b11fec47"
+    },
+    "中角桌和其它数量.xlsx::(旧)中桌数量::44": {
+      "image": "assets/images/edited-1e7a61c3a25540.webp",
+      "sha256": "572b68f8787f0307417bd659055d9d00f5e4ce2388c881c54c51197d76d56c88"
+    },
+    "中角桌和其它数量.xlsx::(旧)中桌数量::45": {
+      "image": "assets/images/edited-f8ceac68538563.webp",
+      "sha256": "91d6bb5570cfa00fea4b9a66b088e5c4d805e0f612db5de0ce7f413d3a86ee57"
+    },
+    "中角桌和其它数量.xlsx::(旧)中桌数量::46": {
+      "image": "assets/images/edited-d7531f53fc8997.webp",
+      "sha256": "bf4fb80a4d1bb824199363cc7decab7e4c85cc5c816bf1dbeb30972e4d84ecfa"
+    },
+    "餐桌椅数量.xlsx::餐桌数量::2": {
+      "image": "assets/images/edited-edbe1c73b042a4.webp",
+      "sha256": "1db38e0b045f377464e2937c54577e726a51823c285545b42f18e59b6a45821e"
+    },
+    "餐桌椅数量.xlsx::餐桌数量::3": {
+      "image": "assets/images/edited-5e16c1ab16fdd6.webp",
+      "sha256": "b0921836f814050894681d274a05be011204327735b316113056b8d98ac7c57e"
+    },
+    "餐桌椅数量.xlsx::餐桌数量::4": {
+      "image": "assets/images/edited-bc2d2417a90366.webp",
+      "sha256": "2e4c85c6793d502eb5ecc7610081ce1041c80d5885a13230ff91e669077de8d4"
+    },
+    "餐桌椅数量.xlsx::餐桌数量::5": {
+      "image": "assets/images/edited-2b22956e916c3b.webp",
+      "sha256": "050ab902a6dd6ee40eb1bb8a645b8434aa25f4a7bfb1cab6ef2f5f9154c74b38"
+    },
+    "餐桌椅数量.xlsx::餐桌数量::6": {
+      "image": "assets/images/edited-90fcd8164f8f0f.webp",
+      "sha256": "0c5ee1cbf6de2b5704d1f64df4347a0dc443271a5af8d11b5a862c5c1228b9f9"
+    },
+    "餐桌椅数量.xlsx::餐桌数量::7": {
+      "image": "assets/images/edited-37b1eccb19c9e6.webp",
+      "sha256": "dcd8f01bbee534db909a3320b1d9e35d2dc1f7f9d1c99de8a328d18ea82e9a22"
+    },
+    "餐桌椅数量.xlsx::餐桌数量::8": {
+      "image": "assets/images/edited-0947123aef8455.webp",
+      "sha256": "6105d0fa0028cf2b7a56d896e1ce3d3ed070477a39eca1bc2d1fc35daa109cf5"
+    },
+    "餐桌椅数量.xlsx::餐桌数量::9": {
+      "image": "assets/images/edited-23c4d652ebb7b7.webp",
+      "sha256": "d82456d7ced97ee9ad89d7376ec05e2935acd0d1471e1c4c58d86675519aaabd"
+    },
+    "餐桌椅数量.xlsx::餐桌数量::10": {
+      "image": "assets/images/edited-19136acdb614e9.webp",
+      "sha256": "0f6fc84db22de95182d37e8d3c9e2161a73f122919daa8aeebac733b08b643e0"
+    },
+    "餐桌椅数量.xlsx::餐桌数量::11": {
+      "image": "assets/images/edited-80d60ae58f8610.webp",
+      "sha256": "d791fba52c0745df7db0c301c4eb4f42db02d66bafcbee356989852924332a6b"
+    },
+    "餐桌椅数量.xlsx::餐桌数量::12": {
+      "image": "assets/images/edited-deb6bab01f1072.webp",
+      "sha256": "a6f4660c646ea6a1f33d656c92d6689611c19a8faf5cc469a3b5bd4c9e2685b7"
+    },
+    "餐桌椅数量.xlsx::餐桌数量::13": {
+      "image": "assets/images/edited-2b6478204d145c.webp",
+      "sha256": "c5b350b82ed67646d20412fcd4a1b358382551f1ea46e61d86acbbb5b26a9f32"
+    },
+    "餐桌椅数量.xlsx::餐桌数量::14": {
+      "image": "assets/images/edited-43a0a34f45457c.webp",
+      "sha256": "c13a5fd19c38191819fab77b501a542a113d4c8a3f3888f66017496c8061fdf2"
+    },
+    "餐桌椅数量.xlsx::餐桌数量::15": {
+      "image": "assets/images/edited-c127a3c1d8bbdf.webp",
+      "sha256": "9a272fa8d0f41441f64e614a499f84c3a7bc637c9fc466b88cab8e1efb32fb59"
+    },
+    "餐桌椅数量.xlsx::餐桌数量::16": {
+      "image": "assets/images/edited-77b2bf816ecdaf.webp",
+      "sha256": "a183d0d6bb33aede377ec81eca53e6fe55d3cdd06616fd108eb9f27fdb9c6161"
+    },
+    "餐桌椅数量.xlsx::餐桌数量::17": {
+      "image": "assets/images/edited-4b9ced214d58a4.webp",
+      "sha256": "15ede5276f3fbbf8b1004d661e234fd0027c2e500e9e86289d02de3ef08ea6da"
+    },
+    "餐桌椅数量.xlsx::餐桌数量::18": {
+      "image": "assets/images/edited-2c17de3f99a105.webp",
+      "sha256": "6394ecc5499346c1b5b39e2a6776d06f44789beac40ae9914f8409f764805562"
+    },
+    "餐桌椅数量.xlsx::餐桌数量::19": {
+      "image": "assets/images/edited-b1e0b9f40c9377.webp",
+      "sha256": "d68d7328cb74977273a7cf87cacf149abc74e9490d30225a5eac777e2771ec16"
+    },
+    "餐桌椅数量.xlsx::餐桌数量::20": {
+      "image": "assets/images/edited-55eb824a48d864.webp",
+      "sha256": "c8e4cb4de6b1e8f474a54b3801d6a2c9f216c61248963df75884b6a5aa5750f6"
+    },
+    "餐桌椅数量.xlsx::餐桌数量::21": {
+      "image": "assets/images/edited-49f1df970b2e69.webp",
+      "sha256": "aa16358726b913dbedc0f556366564c8181632dfc76058d68eb7f136b2258205"
+    },
+    "餐桌椅数量.xlsx::餐桌数量::22": {
+      "image": "assets/images/edited-d4165265a09081.webp",
+      "sha256": "30182896b1ccb24c46934224f62e8b1b424fe8980f579a903168e685b2b3ac74"
+    },
+    "餐桌椅数量.xlsx::餐桌数量::23": {
+      "image": "assets/images/edited-816a7859403a44.webp",
+      "sha256": "927c626778d430f7bf0c84d965723cee27a9dd20763585e68b552194e21adde7"
+    },
+    "餐桌椅数量.xlsx::餐桌数量::24": {
+      "image": "assets/images/edited-6bd4f188af859c.webp",
+      "sha256": "8230626f48e72f782122019883e03c24d5da2619cda55c2c18241355d623809c"
+    },
+    "餐桌椅数量.xlsx::餐桌数量::25": {
+      "image": "assets/images/edited-9bcd5f0eeb375a.webp",
+      "sha256": "32ac90ab4f38ea1b8fe95af36cbcf1757108f4b540098c444913137ebf8aaea1"
+    },
+    "餐桌椅数量.xlsx::餐桌数量::26": {
+      "image": "assets/images/edited-bc49439cdaa509.webp",
+      "sha256": "2ff7996e1e4da77a1dcf209e2821ce1f806c71208ef7eae376e60f3ee6b9d30e"
+    },
+    "餐桌椅数量.xlsx::餐桌数量::27": {
+      "image": "assets/images/edited-f05b7eab60a31e.webp",
+      "sha256": "27fb1f21aeac2882b4538eef9046dcc7431f694030544cddbeae7cfa552b32ad"
+    },
+    "餐桌椅数量.xlsx::餐桌数量::28": {
+      "image": "assets/images/edited-762d702be6439f.webp",
+      "sha256": "3eb018e441804fa83d22824ed534a31063016e72094ef9ef34d4722d5896e526"
+    },
+    "餐桌椅数量.xlsx::餐桌数量::29": {
+      "image": "assets/images/edited-399b59b6fdebc5.webp",
+      "sha256": "3861840403d87ca31663f3426481dccc0fcda4e54a61416d88d0101d4b4fd554"
+    },
+    "餐桌椅数量.xlsx::餐桌数量::30": {
+      "image": "assets/images/edited-8a959c2e44f7d7.webp",
+      "sha256": "017ce604d9244cc0abd8dff5f433bf5940079e95de6226c49e86ddf1f62cfaad"
+    },
+    "餐桌椅数量.xlsx::餐桌数量::31": {
+      "image": "assets/images/edited-00f2126f968c9e.webp",
+      "sha256": "603c2bc4acb9165c10e5ad2e1826f762e056066b0b0cda57a11da097798e65f9"
+    },
+    "餐桌椅数量.xlsx::餐桌数量::32": {
+      "image": "assets/images/edited-91c615ab374428.webp",
+      "sha256": "056d0a499bea54b8e951ec4beb280888c59949a619baeae585fdb5302053c122"
+    },
+    "餐桌椅数量.xlsx::餐桌数量::33": {
+      "image": "assets/images/edited-362d9ab5766af8.webp",
+      "sha256": "7ae3d326b632e5780afcb0d757fce7936346ce4c2af43a7d1fdd328dd42820a0"
+    },
+    "餐桌椅数量.xlsx::餐桌数量::34": {
+      "image": "assets/images/edited-b11a99088dd056.webp",
+      "sha256": "129a463fab60c00759c763b9443fd685931c769ee0e4bd565ca0d5e1c5bab7f1"
+    },
+    "餐桌椅数量.xlsx::餐桌数量::35": {
+      "image": "assets/images/edited-21f439360cf5b2.webp",
+      "sha256": "3b379ff72c3b0940b74da28bd0397904e4c8baa1629a8419f6eac12a608a86ee"
+    },
+    "餐桌椅数量.xlsx::餐桌数量::36": {
+      "image": "assets/images/edited-002871fb006462.webp",
+      "sha256": "c899612d04dda36d4ce1061bbb9577b663d6402b5b130f1eec61dc75aadd244b"
+    },
+    "餐桌椅数量.xlsx::餐桌数量::37": {
+      "image": "assets/images/edited-8df03ed9968e75.webp",
+      "sha256": "2058508d41d7aa56595dfdb69906d8ef8abe0af466a6aaf7e833e87192b0bc58"
+    },
+    "餐桌椅数量.xlsx::餐桌数量::38": {
+      "image": "assets/images/edited-1d01a350bfdb4c.webp",
+      "sha256": "c0d530a23456d589c453ad3f0eed719a7748d9f353534c7f0b5dd0fea0aba242"
+    },
+    "餐桌椅数量.xlsx::餐桌数量::39": {
+      "image": "assets/images/edited-a6b0bf70e6fa8c.webp",
+      "sha256": "aa5229e7683a6eb9bd1b4908be732dd3166dca7bf44349920a69b9527b632935"
+    },
+    "餐桌椅数量.xlsx::餐桌数量::40": {
+      "image": "assets/images/edited-994d3740382b95.webp",
+      "sha256": "12e859e0c1d8c4884eec0a3e1067a3530dac02ff5b85d5f4bdda6b07822e65a9"
+    },
+    "餐桌椅数量.xlsx::餐桌数量::41": {
+      "image": "assets/images/edited-2252675b5090f6.webp",
+      "sha256": "b5337bb9c11735ca77d0c340102fc8307ff42afaa79d6ab16721e0f10859c7ae"
+    },
+    "餐桌椅数量.xlsx::餐桌数量::42": {
+      "image": "assets/images/edited-8bd1182ce14f2e.webp",
+      "sha256": "573eac24247762f0d4563fe1ce14a4c525ee75aa256a849196d9101524d1d594"
+    },
+    "餐桌椅数量.xlsx::餐桌数量::43": {
+      "image": "assets/images/edited-e7544688d5440b.webp",
+      "sha256": "366147b86a84b9bd60e155bd9e1ad5510de4f164b4f6f7697bacfe0cc0f63afc"
+    },
+    "餐桌椅数量.xlsx::餐桌数量::44": {
+      "image": "assets/images/edited-ab8bd48138c0c5.webp",
+      "sha256": "f95d4341c6d7e3168f27c1e918ec237cc3d4a4a0d34e6d7212a36978e3d2905e"
+    },
+    "餐桌椅数量.xlsx::餐桌数量::45": {
+      "image": "assets/images/edited-6e86b24622f72d.webp",
+      "sha256": "655a5a2665d4b80aada8f89f2583f15db51f2996c46382428fd062de3c0a44ce"
+    },
+    "餐桌椅数量.xlsx::餐桌数量::46": {
+      "image": "assets/images/edited-79374ec6a41ba1.webp",
+      "sha256": "1d2230469ae5156988c3990275d692c11502600a6d80c1d8cb541203a26b919f"
+    },
+    "餐桌椅数量.xlsx::餐桌数量::47": {
+      "image": "assets/images/edited-ef0a8390a9dc43.webp",
+      "sha256": "8fcafa98cf09ad2d90764c5c6c7aa40ef5c7f068d0e7616f999b498f0b329db0"
+    },
+    "餐桌椅数量.xlsx::餐桌数量::48": {
+      "image": "assets/images/edited-3e8b46cd3452a2.webp",
+      "sha256": "02053c8698f212932de4170433964b0cb21ea66ae84b8c55b3581912138b457d"
+    },
+    "餐桌椅数量.xlsx::餐桌数量::49": {
+      "image": "assets/images/edited-f8c1b951746ada.webp",
+      "sha256": "e404bf6e2421121ec553a20236dfea4dcd55227c2d1332c6b6b105f04c0070db"
+    },
+    "餐桌椅数量.xlsx::餐桌数量::50": {
+      "image": "assets/images/edited-693c4394962137.webp",
+      "sha256": "d6be25f8c09cb288569e6c518536f274331321ecf3ee4fb1e5313b444898a393"
+    },
+    "餐桌椅数量.xlsx::餐桌数量::51": {
+      "image": "assets/images/edited-aeeb3d3eb71dfd.webp",
+      "sha256": "7b7b991ee7cbf4e322eda6375fe0aa27f6fab665dee3627b070c99697c5c8cd7"
+    },
+    "餐桌椅数量.xlsx::餐桌数量::52": {
+      "image": "assets/images/edited-a6029f9c1b688d.webp",
+      "sha256": "6100f9584fedc35c28dcc80f7138e45296c2768d54a55ff5ad54a2e11efdc4a1"
+    },
+    "餐桌椅数量.xlsx::餐桌数量::53": {
+      "image": "assets/images/edited-c4d6b6866a875d.webp",
+      "sha256": "43efa0bee989ec16caea0ff7045046630dcae6ed231d1d60d72920d378b254f0"
+    },
+    "餐桌椅数量.xlsx::餐桌数量::54": {
+      "image": "assets/images/edited-71a7d9f05cbfa7.webp",
+      "sha256": "81f0d5fcd01dc9421426ee47c884b37733414068aaf8f44715a5c627499d7f2b"
+    },
+    "餐桌椅数量.xlsx::餐桌数量::55": {
+      "image": "assets/images/edited-dfdf5e9b45e6c8.webp",
+      "sha256": "83c713287a5b2d45ded7db5f210eb5a20eaf3231a30c68a83a00f95b15d529e9"
+    },
+    "餐桌椅数量.xlsx::餐桌数量::56": {
+      "image": "assets/images/edited-396613214e7630.webp",
+      "sha256": "ec6a82980342d47b40031ffcc9304b53bf216fdeb4eb9a731f7fa1ce94911cf9"
+    },
+    "餐桌椅数量.xlsx::餐桌数量::57": {
+      "image": "assets/images/edited-5f1d207ce309fc.webp",
+      "sha256": "f2cbb492a9b80ecf3aa28c1d26fa22eb9a2c0ad3ca74f83b4a230ab0fdbe7583"
+    },
+    "餐桌椅数量.xlsx::餐桌数量::59": {
+      "image": "assets/images/edited-07aa1162b7e578.webp",
+      "sha256": "877ad108a749d5574fc0119738b1cec1e1c2c0caaefa5d14784ce306ab9222e1"
+    },
+    "餐桌椅数量.xlsx::餐桌数量::60": {
+      "image": "assets/images/edited-1e37518268b3e9.webp",
+      "sha256": "cb94694432cbe96710e928a6c99eb9e41421d41f69ef4c5691fa63c36ce9bb72"
+    },
+    "餐桌椅数量.xlsx::餐桌数量::61": {
+      "image": "assets/images/edited-e33f5ad679ccbd.webp",
+      "sha256": "354331476346fb4306b0587f0423b2ecf8e75e8cfcf1d034afbbccb61e8ab9be"
+    },
+    "餐桌椅数量.xlsx::餐桌数量::62": {
+      "image": "assets/images/edited-9cb967dd9bef7f.webp",
+      "sha256": "1c397fdeb17bfac50c7f82eefc20b2d6a538acbc4e07a5754ddd9131a0f15002"
+    },
+    "餐桌椅数量.xlsx::餐桌数量::63": {
+      "image": "assets/images/edited-0131fa351feaf5.webp",
+      "sha256": "db404ba471c25f6b8953942d2dacb79481a2ffd5dc3c8795bf407d3573f81ff9"
+    },
+    "餐桌椅数量.xlsx::餐桌数量::64": {
+      "image": "assets/images/edited-57ab73c4a2ec94.webp",
+      "sha256": "9d72112ae131a80f19edd57b5eb0e06649d00d7d4ddc43923cdbe22a8c3dbafb"
+    },
+    "餐桌椅数量.xlsx::餐桌数量::65": {
+      "image": "assets/images/edited-f3fa690bacda2c.webp",
+      "sha256": "9d056c1845956def367778b85eecbad413ef6cbbae02c2ad30317463dbeb723d"
+    },
+    "餐桌椅数量.xlsx::餐桌数量::67": {
+      "image": "assets/images/edited-327a3fbd66bd33.webp",
+      "sha256": "bd82bd25e86f6cdf051bc738b360e6b5b9955ed0b2171003976c6bff1aefa584"
+    },
+    "餐桌椅数量.xlsx::餐桌数量::68": {
+      "image": "assets/images/edited-55ad871744ae84.webp",
+      "sha256": "2652a73f7ef7a6ca270ffcf2206812dd4ca7db74b645ce01b8525d149594e21e"
+    },
+    "餐桌椅数量.xlsx::餐桌数量::69": {
+      "image": "assets/images/edited-055ea6f5b0542a.webp",
+      "sha256": "4ccca93abd0dd54de5e626f44b35d9b2a871155b9044e5230bfec636c9ae31eb"
+    },
+    "餐桌椅数量.xlsx::餐桌数量::70": {
+      "image": "assets/images/edited-811284716754dd.webp",
+      "sha256": "53de96ebc8d991c8197ed55fc391ac019a9d282ed6e068c8365462d947602655"
+    },
+    "餐桌椅数量.xlsx::餐桌数量::71": {
+      "image": "assets/images/edited-7e43967b698386.webp",
+      "sha256": "07260471bc3e16dceae156821b1f827125aad96ddb575b9d06e5415902080c63"
+    },
+    "餐桌椅数量.xlsx::餐桌数量::72": {
+      "image": "assets/images/edited-d0274ae6343bdd.webp",
+      "sha256": "70466a8fd2d5a2f5b127aaf50be14ec7f0016de24f60a7083994a6e019039ff7"
+    },
+    "餐桌椅数量.xlsx::餐桌数量::73": {
+      "image": "assets/images/edited-2de2321791fd2d.webp",
+      "sha256": "783022ed4689d3791790af898d12192f97d03fe62eea5ccf8918022acf5f9e53"
+    },
+    "餐桌椅数量.xlsx::餐桌数量::74": {
+      "image": "assets/images/edited-6642218764ec5d.webp",
+      "sha256": "26f559391b1aff594342d98be0bbfa88f5e276f21e4e9814c9dcfab63e9c12cd"
+    },
+    "餐桌椅数量.xlsx::餐桌数量::75": {
+      "image": "assets/images/edited-c6e3087592d9df.webp",
+      "sha256": "068df4b606627f147b715a0d4fa609acfb6b28e58cc8fbcef737622a70e2a4b3"
+    },
+    "餐桌椅数量.xlsx::餐桌数量::76": {
+      "image": "assets/images/edited-b275c021bec20c.webp",
+      "sha256": "d58cee338fe367db819d2d2031d379c974deaeb5582ff63a2300ce9673b83768"
+    },
+    "餐桌椅数量.xlsx::餐桌数量::77": {
+      "image": "assets/images/edited-a9faab55bfd868.webp",
+      "sha256": "d3bbbb22010d6ead78db3b9b2d07e31ff001f30596e9d2edc75303ca2867dd11"
+    },
+    "餐桌椅数量.xlsx::餐椅数量::2": {
+      "image": "assets/images/edited-db4f3dc95c4f25.webp",
+      "sha256": "51b782892986b1d7f7eb63e3c97a2c8e6fdfe561ac0956a4da64cbb98a5bb5e0"
+    },
+    "餐桌椅数量.xlsx::餐椅数量::3": {
+      "image": "assets/images/edited-2196a93763de8d.webp",
+      "sha256": "645a5d46f0d588f6946abf73b8fd5cf505da0a79a3935bc18423c87d8994bbd9"
+    },
+    "餐桌椅数量.xlsx::餐椅数量::4": {
+      "image": "assets/images/edited-bf1b197f14776f.webp",
+      "sha256": "a5c1900d22f20516d7ac577393f3a5870fe4d0df037db4a77afde44f1cb555a8"
+    },
+    "餐桌椅数量.xlsx::餐椅数量::5": {
+      "image": "assets/images/edited-fb33f2aff186af.webp",
+      "sha256": "066593ea3de8e173fb259132a7f346a8cb66531d24dc871eb4a0794c926e86bf"
+    },
+    "餐桌椅数量.xlsx::餐椅数量::6": {
+      "image": "assets/images/edited-13c8370dae06d8.webp",
+      "sha256": "d8767ff6c6f3e1f33b58d974963f50f95d0f4e2eff0ccbab0858100e02ffd13b"
+    },
+    "餐桌椅数量.xlsx::餐椅数量::7": {
+      "image": "assets/images/edited-22c19e776948b4.webp",
+      "sha256": "02346f4a39983bd3c409c4a7fc2b314a0b32de75b3483db4d2d763dc0340be36"
+    },
+    "餐桌椅数量.xlsx::餐椅数量::8": {
+      "image": "assets/images/edited-0fc6a1990bc2f6.webp",
+      "sha256": "1f77dedc1b8436d8961172f84197863e12a5f6c8c3a5c6fbdeeb5e98403376a0"
+    },
+    "餐桌椅数量.xlsx::餐椅数量::9": {
+      "image": "assets/images/edited-6de0e5f7acd9f4.webp",
+      "sha256": "7af50d8921f38fca7b8d1a17d10ad40769180a115f90101cedd3298f368c8687"
+    },
+    "餐桌椅数量.xlsx::餐椅数量::10": {
+      "image": "assets/images/edited-5f1645c82e3449.webp",
+      "sha256": "b650ecb35668384c3b9de34d5da82806f8d4da9e3acf4322c6a206416e4cd668"
+    },
+    "餐桌椅数量.xlsx::餐椅数量::11": {
+      "image": "assets/images/edited-f3ead6eb1fe691.webp",
+      "sha256": "27bd2406fd280b4a660660e886993da0e533264d05bbcbcbc9c9df5de957314e"
+    },
+    "餐桌椅数量.xlsx::餐椅数量::12": {
+      "image": "assets/images/edited-6ac025f3bae4b9.webp",
+      "sha256": "91af51b8023cc2b24117e6ab69d30a965eeeea643b1c326dc16554283a7d7039"
+    },
+    "餐桌椅数量.xlsx::餐椅数量::13": {
+      "image": "assets/images/edited-2229f0b9044e48.webp",
+      "sha256": "03bd2e9533ab3b1ee4513b6176ac1c2c21a12efaab74675b1cd2cddda40791f8"
+    },
+    "餐桌椅数量.xlsx::餐椅数量::14": {
+      "image": "assets/images/edited-a9f5c8f876e8e6.webp",
+      "sha256": "58026fde47a2b99aa27e73215e00de9ad13b4411572ff8944b7090df5a411f16"
+    },
+    "餐桌椅数量.xlsx::餐椅数量::15": {
+      "image": "assets/images/edited-ca8290ea0570e9.webp",
+      "sha256": "42c2a486ec708cb883a95aaf04573236c00bbcee86c00b4069bd19ac349dc61d"
+    },
+    "餐桌椅数量.xlsx::餐椅数量::16": {
+      "image": "assets/images/edited-b94c5f4cff2b1f.webp",
+      "sha256": "b737d19169bd81655be6557f308c3c64c9e2fac7aa1b50eea98dad45927f606e"
+    },
+    "餐桌椅数量.xlsx::餐椅数量::17": {
+      "image": "assets/images/edited-39c65ead955706.webp",
+      "sha256": "4bbd28639e0e2bf1d2b33cf0415c64f625633fbd8d1d979cfadf69c0d70511ac"
+    },
+    "餐桌椅数量.xlsx::餐椅数量::18": {
+      "image": "assets/images/edited-185ed109301ede.webp",
+      "sha256": "2a1e53af7394afb6166d9ddacaebf0d3c2c6841e1469a1fa0177afc8fc7d5370"
+    },
+    "餐桌椅数量.xlsx::餐椅数量::19": {
+      "image": "assets/images/edited-6ea8b3b9487e5d.webp",
+      "sha256": "bde13ddff1e4137aa5fe05c9319827f0d6f3d6b529a502dc2fdc9af3143b4495"
+    },
+    "餐桌椅数量.xlsx::餐椅数量::20": {
+      "image": "assets/images/edited-b41ad882a2be05.webp",
+      "sha256": "a29fdc79edca02014de61bd2477f772850320d92fb9afb55cc2d16f66b9afb57"
+    },
+    "餐桌椅数量.xlsx::餐椅数量::21": {
+      "image": "assets/images/edited-af2fcd3502eebb.webp",
+      "sha256": "392ba6fc0fbaabf5e1aa7a6d9c5eabdd5284835c03118308b5fe121ec1e6ea6d"
+    },
+    "餐桌椅数量.xlsx::餐椅数量::22": {
+      "image": "assets/images/edited-1f7103f96a8761.webp",
+      "sha256": "ba4142a2db8f544ece53faf36b125496d09a033a3a122e28a328e87077fb6d37"
+    },
+    "餐桌椅数量.xlsx::餐椅数量::23": {
+      "image": "assets/images/edited-b128efaf5dfd3a.webp",
+      "sha256": "e42c0eb795d8dea04f4c7ae2865095bb61e5e386e2b74f9b5ec7b464655230f6"
+    },
+    "餐桌椅数量.xlsx::餐椅数量::24": {
+      "image": "assets/images/edited-2ff00801b89456.webp",
+      "sha256": "6b0fce1747e230db404b9b9bb80f94fb0e4b62cc00f78bc57ebcd6b558eb9305"
+    },
+    "餐桌椅数量.xlsx::餐椅数量::25": {
+      "image": "assets/images/edited-8b50bbd64f8e2d.webp",
+      "sha256": "30c14e189025d3f8f34a804aa8b0c3d21760a8128eeb6422609437a77a5d77b1"
+    },
+    "餐桌椅数量.xlsx::餐椅数量::26": {
+      "image": "assets/images/edited-65cfdf775c18ee.webp",
+      "sha256": "4c1c6ed42ad4c094c269a3e3557fb4e9545803cb8b8eed133285e39067234401"
+    },
+    "餐桌椅数量.xlsx::餐椅数量::27": {
+      "image": "assets/images/edited-ee2dbda9bebb86.webp",
+      "sha256": "4b2f5eb005a2e488b59c335252568eb4e518b4c712747609639a4d2a85fa9cdd"
+    },
+    "餐桌椅数量.xlsx::餐椅数量::28": {
+      "image": "assets/images/edited-dfb99c2656a4c1.webp",
+      "sha256": "3b65acbd3d6b25bf518c7536ebc265f14083550ba0573fe2c5f2af824a7d6272"
+    },
+    "餐桌椅数量.xlsx::餐椅数量::29": {
+      "image": "assets/images/edited-5e1d70b2f3557d.webp",
+      "sha256": "c7c072f28b41d1a55f4e49942d7e2df1a60c7897d1fec06f8457e947726bf15a"
+    },
+    "餐桌椅数量.xlsx::餐椅数量::30": {
+      "image": "assets/images/edited-1c09643d8c64c5.webp",
+      "sha256": "6cb46ed87c0282cf0ca9424f933d33d4e29a59da998ccdcecd79ef8c53be54de"
+    },
+    "餐桌椅数量.xlsx::餐椅数量::31": {
+      "image": "assets/images/edited-61ffbedfb2ca10.webp",
+      "sha256": "7a386f2d72fd3b16412d1b39230b76731369fd8fb28611aac458ed992db3a62f"
+    },
+    "餐桌椅数量.xlsx::餐椅数量::32": {
+      "image": "assets/images/edited-c4b5565980387e.webp",
+      "sha256": "b09988c22abc80eda96c75f08b16562e522bb4d2b0c04b5d6c738b8d26beb449"
+    },
+    "餐桌椅数量.xlsx::餐椅数量::33": {
+      "image": "assets/images/edited-4f45bd6fce9003.webp",
+      "sha256": "d217b094b9da20518be63ab1d5ffb162bc11bdf7eda6813898964fd2dfa3f1a1"
+    },
+    "餐桌椅数量.xlsx::餐椅数量::34": {
+      "image": "assets/images/edited-ece7f40e4baeb6.webp",
+      "sha256": "5d3b8c0f3fd6ea3efc6c2fb784878c49fccb4cb5d12e7805796d8926abb76311"
+    },
+    "餐桌椅数量.xlsx::餐椅数量::35": {
+      "image": "assets/images/edited-f77ddc51d06fa7.webp",
+      "sha256": "87b76c2c3a04a719d03a24eb7c184d8a9de2f82ebafbaceef72f47da83343f55"
+    },
+    "餐桌椅数量.xlsx::餐椅数量::36": {
+      "image": "assets/images/edited-7ba70817c6e940.webp",
+      "sha256": "2b81d984646a9d14092959f3586ad581f0df9e3187b9bac2b5b13cc0f536e884"
+    },
+    "餐桌椅数量.xlsx::餐椅数量::37": {
+      "image": "assets/images/edited-a45b5573824e26.webp",
+      "sha256": "cb024e3815c9033a36f127e4ce41857af5c858a27039f3d868d609196700f59f"
+    },
+    "餐桌椅数量.xlsx::餐椅数量::38": {
+      "image": "assets/images/edited-70d7bd69c470bb.webp",
+      "sha256": "dfb32cbf77fc232636a548f0f6eb38c90a201bf0d68d056b25f02ac9c676e0fc"
+    },
+    "餐桌椅数量.xlsx::餐椅数量::39": {
+      "image": "assets/images/edited-be7418c41871c7.webp",
+      "sha256": "b252b117f8b6ccdc562c81d5d8dead037fc3013e8591bcbbb30701c1f659a5ba"
+    },
+    "餐桌椅数量.xlsx::餐椅数量::40": {
+      "image": "assets/images/edited-ec2b0708e7be58.webp",
+      "sha256": "070ba0fa17f9421141d008c1174c544d4e819c15c9a65fb7394e5c599262669a"
+    },
+    "餐桌椅数量.xlsx::餐椅数量::41": {
+      "image": "assets/images/edited-115d1cb8d7e99c.webp",
+      "sha256": "2ad985c434572d292258d19859cac027f81ef39fa3bac68b36a56516472e5d2d"
+    },
+    "餐桌椅数量.xlsx::餐椅数量::42": {
+      "image": "assets/images/edited-7e0ea0ab4183bb.webp",
+      "sha256": "03161ba1f4457bed8258c9e3b1028e7122ae5cefef948e218a609eb7ae136f2c"
+    },
+    "餐桌椅数量.xlsx::餐椅数量::43": {
+      "image": "assets/images/edited-cd90f95d2e554b.webp",
+      "sha256": "60d79bf87e91bc2c74bcebad5607c9a2c35556dfac61453eadffb71aab66f68b"
+    },
+    "餐桌椅数量.xlsx::餐椅数量::44": {
+      "image": "assets/images/edited-f03de173cf52ab.webp",
+      "sha256": "ebcfb1cf677bb54b512348c57ac25160bfbe2626d7b902f74c9f6a80b1de27e3"
+    },
+    "餐桌椅数量.xlsx::餐椅数量::45": {
+      "image": "assets/images/edited-1be21eeb1580dc.webp",
+      "sha256": "0b9fb446c4f3c6b183e20fc46f4ef498e2bc08cd97f3a04becb591628e8faee9"
+    },
+    "餐桌椅数量.xlsx::餐椅数量::46": {
+      "image": "assets/images/edited-5fe17317889ffc.webp",
+      "sha256": "911e891d41ff8b174c5a6944105e0c8e473da262f67d20f19be4b87f665ea79a"
+    },
+    "餐桌椅数量.xlsx::餐椅数量::47": {
+      "image": "assets/images/edited-0744be4ed77d5e.webp",
+      "sha256": "c1034ebd794d2cefaedafd2cb3d5052e666b2f6f3762e649d29a7ad3a866eeed"
+    },
+    "餐桌椅数量.xlsx::餐椅数量::48": {
+      "image": "assets/images/edited-91ba1c009877df.webp",
+      "sha256": "1701283707c822de64f9b9c35cd82a79a42a21016be6e29eef4d2c829a9b73a0"
+    },
+    "餐桌椅数量.xlsx::餐椅数量::49": {
+      "image": "assets/images/edited-43f73b7d981ccb.webp",
+      "sha256": "51123112e2d44f97c82898718f4c630c6ced3000eb57208ee73332cc643f1360"
+    },
+    "餐桌椅数量.xlsx::餐椅数量::50": {
+      "image": "assets/images/edited-8c479c87014f70.webp",
+      "sha256": "949a4446a450797ac225e435884e156cfc95de58a53fc6d7d0032a5e63f7216e"
+    },
+    "餐桌椅数量.xlsx::餐椅数量::51": {
+      "image": "assets/images/edited-05e821d81cdfaa.webp",
+      "sha256": "a864de7a491823746ec2e3d188fe1c4196d0c97a7868266d1f7a149c91fa5716"
+    },
+    "餐桌椅数量.xlsx::餐椅数量::52": {
+      "image": "assets/images/edited-93953b19e4af9b.webp",
+      "sha256": "bc3935ff10d358875d6df155d33aa01762a8b2b396692adfccb32ffcc9faa1bc"
+    },
+    "餐桌椅数量.xlsx::餐椅数量::53": {
+      "image": "assets/images/edited-5727d893127474.webp",
+      "sha256": "35865dbe189994b5719a10a6a3ca8f1c18e7438ea5a3969ec733130fae69394e"
+    },
+    "餐桌椅数量.xlsx::餐椅数量::54": {
+      "image": "assets/images/edited-c8beaf6fae399d.webp",
+      "sha256": "7f499504ac9d6f3f7482d321e68a0c147ffc726c48f465252b32f6f28e8467db"
+    },
+    "餐桌椅数量.xlsx::餐椅数量::55": {
+      "image": "assets/images/edited-1b8a9281e962bb.webp",
+      "sha256": "51835c8ba1a92e8dd62769d744645c9d6e187bbbfd4c66664b951863cb39c20d"
+    },
+    "餐桌椅数量.xlsx::餐椅数量::56": {
+      "image": "assets/images/edited-17ae3018d63d43.webp",
+      "sha256": "976d239aeb585877b265e1b73f51150fbcd0cfbedfcfc454dc3fbf2802d1d51d"
+    },
+    "餐桌椅数量.xlsx::餐椅数量::57": {
+      "image": "assets/images/edited-65560e81d169cf.webp",
+      "sha256": "1692cda668487681a6d19002f235e21bcfd379b07d0ebc49777658528b4dd31e"
+    },
+    "餐桌椅数量.xlsx::餐椅数量::58": {
+      "image": "assets/images/edited-2f2d447c9f38fe.webp",
+      "sha256": "55e66428a2ba4c7105c97cf2994625f9717c35697bd884742f25f6645e408ba9"
+    },
+    "餐桌椅数量.xlsx::餐椅数量::59": {
+      "image": "assets/images/edited-a1e14c2a119c23.webp",
+      "sha256": "687116a552eff9946921a4ad565840cac32878d42484689a204b6bb0894bf64d"
+    },
+    "餐桌椅数量.xlsx::餐椅数量::60": {
+      "image": "assets/images/edited-d701fb09779eab.webp",
+      "sha256": "d72a93ba06422044763cbdaf8cffd4ef1fbb5ea6573cdd76c23435a1d0eb3ed5"
+    },
+    "餐桌椅数量.xlsx::餐椅数量::61": {
+      "image": "assets/images/edited-c4ad022d7ca438.webp",
+      "sha256": "207f3b0c1d52565e7fb4cc753f594613e93361c5cc751e87a19372172dde5c77"
+    },
+    "餐桌椅数量.xlsx::餐椅数量::62": {
+      "image": "assets/images/edited-279470f244bf8e.webp",
+      "sha256": "a3bfa627374e24642bf5dfc26a315b6e1ddde97a782620fc4b01991cf2b87b29"
+    },
+    "餐桌椅数量.xlsx::餐椅数量::63": {
+      "image": "assets/images/edited-a6f5f77b666fb0.webp",
+      "sha256": "d759de438add69505fbfb1083e9b9b28d36499148de49933a6777cd0354c4ad7"
+    },
+    "餐桌椅数量.xlsx::餐椅数量::64": {
+      "image": "assets/images/edited-8006568df3a317.webp",
+      "sha256": "7fe2c7861ece32ad66aa27a15385b4145c7d395d4bef888c07f2805e90fea2ac"
+    },
+    "餐桌椅数量.xlsx::餐椅数量::65": {
+      "image": "assets/images/edited-09d20156b5aadc.webp",
+      "sha256": "4206e79bd3320362e03ab0626d9e5e6806a517c506faf99173a643ed8825cc0f"
+    },
+    "餐桌椅数量.xlsx::餐椅数量::66": {
+      "image": "assets/images/edited-50efd699263385.webp",
+      "sha256": "f29460a8d75c1ef87f67c4178547d027686882f6ed13c7ef8ba8fd21e778edf7"
+    },
+    "餐桌椅数量.xlsx::餐椅数量::67": {
+      "image": "assets/images/edited-57df6a1a4c708d.webp",
+      "sha256": "6803ac7dc60f0d5b4fbdcff345ee5f183f08e568fc4713d97018b28bd4eb6f7f"
+    },
+    "餐桌椅数量.xlsx::餐椅数量::68": {
+      "image": "assets/images/edited-a74f7140459c41.webp",
+      "sha256": "9b3031cf61fe9ca71e243178f9735c139a302e11eb51329b54389527f34730e0"
+    },
+    "餐桌椅数量.xlsx::餐椅数量::69": {
+      "image": "assets/images/edited-cd2191891cfe9b.webp",
+      "sha256": "232936a54c0a0f965aa416a46e62c784247a1f7f28fa6493d90aca7174d7af01"
+    },
+    "餐桌椅数量.xlsx::餐椅数量::70": {
+      "image": "assets/images/edited-134adf5e1d27b6.webp",
+      "sha256": "ea2ccd7b94848e669c26a3fb3adc15b6b60504c31c3269004f15aba4cb78eea8"
+    },
+    "餐桌椅数量.xlsx::餐椅数量::71": {
+      "image": "assets/images/edited-2314dcd2b7f5a4.webp",
+      "sha256": "dfb1fa0b7d4070d599c06a259a9ea3460ea4021b04acce2c5cd9959aea7dfa79"
+    },
+    "餐桌椅数量.xlsx::餐椅数量::72": {
+      "image": "assets/images/edited-1d93f1ee6abbf2.webp",
+      "sha256": "b1168d7857e3b3546eb44cfa8f724d8c5009783ba81fbb9060dd1b9493ca47f9"
+    },
+    "餐桌椅数量.xlsx::餐椅数量::73": {
+      "image": "assets/images/edited-d59df6fc421187.webp",
+      "sha256": "0387a5b3fd71c82e55abf0987cbffedb3f77a9eb22c2cdcc7fdd1d68de16b6c1"
+    },
+    "餐桌椅数量.xlsx::餐椅数量::74": {
+      "image": "assets/images/edited-69b2eb9997ec47.webp",
+      "sha256": "3275a786ca659a570ae0b6414db11acd001bcdd9fcf2273d741771988af10178"
+    },
+    "餐桌椅数量.xlsx::餐椅数量::75": {
+      "image": "assets/images/edited-c52fa37e0fd1c6.webp",
+      "sha256": "9d7a1743e4933b4687fc1aeefd6cf1cf803f20a3413903a828a6a186608241ef"
+    },
+    "餐桌椅数量.xlsx::餐椅数量::76": {
+      "image": "assets/images/edited-fd124812f8fee7.webp",
+      "sha256": "11d86f47e90fc49bb72a3bd109bddbf77431c627ac519d1f3f1223d9e4854e02"
+    },
+    "餐桌椅数量.xlsx::餐椅数量::77": {
+      "image": "assets/images/edited-4123c1b5a4045a.webp",
+      "sha256": "16b4d6733501595bb1580cdaac672da303dedbdca540a6c7a582afc5a9659565"
+    },
+    "餐桌椅数量.xlsx::餐椅数量::79": {
+      "image": "assets/images/edited-cdf8915670758b.webp",
+      "sha256": "96c7d722e90a1ee23e1250362168207a4095b79197726757ccd0f16c8558c796"
+    },
+    "餐桌椅数量.xlsx::餐椅数量::80": {
+      "image": "assets/images/edited-b797c62c7b0fab.webp",
+      "sha256": "eb6506d1828a68ba8ea602a9a3be40706d37e059f274bf51617a641746db74fa"
+    },
+    "餐桌椅数量.xlsx::餐椅数量::81": {
+      "image": "assets/images/edited-7ab86e52fe28ec.webp",
+      "sha256": "6ab19bb2a3ba7e92428600f64597faa28ef1406f8a34239516683c8763eba880"
+    },
+    "餐桌椅数量.xlsx::餐椅数量::82": {
+      "image": "assets/images/edited-9175646017c628.webp",
+      "sha256": "c165e097ba3536069a1a3664db32ee7e79c5ecc81f541528c1d45c197a4ef4cd"
+    },
+    "餐桌椅数量.xlsx::餐椅数量::85": {
+      "image": "assets/images/edited-fcc481670dc1f1.webp",
+      "sha256": "caf2b026b70865c39cb837334774d3126f31aff34726ed61e08e1c3119dbab6b"
+    },
+    "餐桌椅数量.xlsx::餐椅数量::86": {
+      "image": "assets/images/edited-fc1d95351531c1.webp",
+      "sha256": "3004211540b7b23677ed61eb57e67db27452a7e758fcd2303ab7196880b912a5"
+    },
+    "餐桌椅数量.xlsx::餐椅数量::87": {
+      "image": "assets/images/edited-91b10c4463f1ad.webp",
+      "sha256": "3173d8a0ed36d9da7ab8bd2a3d09fdb362e2b1cf426de05f285d8d2a2f182ca7"
+    },
+    "餐桌椅数量.xlsx::餐椅数量::88": {
+      "image": "assets/images/edited-ced52bd3fb0f90.webp",
+      "sha256": "e1e369201727bfeb8d7c65660ad67dded4c8d28c4d92bc8fab5871413191ba30"
+    },
+    "餐桌椅数量.xlsx::餐椅数量::89": {
+      "image": "assets/images/edited-6e0c09c016ab44.webp",
+      "sha256": "099d214f13f73a6ea51396674302dd8dcf9e7c36cb30109e7c1aa4c69d20be4a"
+    },
+    "餐桌椅数量.xlsx::餐椅数量::90": {
+      "image": "assets/images/edited-08818ec5cd2b81.webp",
+      "sha256": "1450d2eef4a42d085357f528f36db4c19d1ca7d970f720ff2ff1f739c184d88c"
+    },
+    "餐桌椅数量.xlsx::餐椅数量::91": {
+      "image": "assets/images/edited-18ea5c55684fa5.webp",
+      "sha256": "fe27447062106371cc8e2e3b39d1a9e6c347181938e19fba6d57ea45022da69c"
+    },
+    "餐桌椅数量.xlsx::餐椅数量::92": {
+      "image": "assets/images/edited-8b19d5eca1c0c4.webp",
+      "sha256": "0f5b4b5d8fff5f4140b2fc68256b8e6c0a2ffdf25fe7644ef22ab46a12e6afef"
+    },
+    "餐桌椅数量.xlsx::餐椅数量::93": {
+      "image": "assets/images/edited-1291d9d7d62a0f.webp",
+      "sha256": "984bebe4a170f975de9715cab4ca4e6f08a12c9708c7a46d33f23a01d3f23151"
+    },
+    "餐桌椅数量.xlsx::餐椅数量::94": {
+      "image": "assets/images/edited-f6536205c2a62c.webp",
+      "sha256": "c64c00a9e14148197a68a54c0e4653a0555f3c33f42ce6720e88a8d8667f372e"
+    },
+    "餐桌椅数量.xlsx::餐椅数量::95": {
+      "image": "assets/images/edited-a7bbc6f6cdbadc.webp",
+      "sha256": "99362857e4000a6236cdcd626e584696d4b91ba54de73b0a1869fd6f7c1498d6"
+    },
+    "餐桌椅数量.xlsx::餐椅数量::96": {
+      "image": "assets/images/edited-d0c0d54aeb348b.webp",
+      "sha256": "f2f692de2fd2f4b5a48f319328c0570f1c0834dba0a9f5b2b3f1a60f33331621"
+    },
+    "餐桌椅数量.xlsx::餐椅数量::97": {
+      "image": "assets/images/edited-34b4729b5746ea.webp",
+      "sha256": "a129a1c67bde136a650259e0a55ba88e0baee56448a8980d66de85ffb57cfa52"
+    }
+  }
+}

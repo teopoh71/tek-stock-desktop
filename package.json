@@ -1,0 +1,90 @@
+{
+  "name": "samlee-inventory-desktop",
+  "version": "1.6.7",
+  "description": "TEK STOCK Singapore furniture inventory desktop application",
+  "main": "main.cjs",
+  "author": "SAMLEE",
+  "license": "UNLICENSED",
+  "scripts": {
+    "test": "node --test test/*.test.cjs",
+    "start": "electron .",
+    "test:workbook-identity": "node scripts/run-workbook-identity-gate.cjs",
+    "dist:msi": "npm run test:workbook-identity && node build/verify-packaged-version.cjs && node inventory/verify-photo-lock.js && electron-builder --win msi --x64 && node build/harden-msi-local-install.cjs",
+    "dist:update": "npm run test:workbook-identity && node build/verify-packaged-version.cjs && node inventory/verify-photo-lock.js && electron-builder --config build/electron-builder.update.cjs --win nsis --x64 --publish never",
+    "dist:remote": "npm run test:workbook-identity && node build/verify-packaged-version.cjs && node inventory/verify-photo-lock.js && electron-builder --config build/electron-builder.remote.cjs --win nsis --x64",
+    "dist:win7": "npm run test:workbook-identity && node build/verify-packaged-version.cjs && node inventory/verify-photo-lock.js && electron-builder --config build/electron-builder.win7.cjs --win msi --x64"
+  },
+  "devDependencies": {
+    "electron": "37.10.3",
+    "electron-builder": "^26.0.12"
+  },
+  "build": {
+    "appId": "com.samlee.inventory",
+    "productName": "TEK STOCK Singapore",
+    "executableName": "TEK STOCK",
+    "directories": {
+      "output": "dist"
+    },
+    "afterPack": "./build/verify-packaged-version.cjs",
+    "files": [
+      "main.cjs",
+      "preload.cjs",
+      "alibaba-config.cjs",
+      "api-failover.cjs",
+      "central-sync.cjs",
+      "sync-trace.cjs",
+      "excel-live.cjs",
+      "sync-outbox.cjs",
+      "workbook-fingerprint.cjs",
+      "workbook-location.cjs",
+      "workbook-identity-migration.cjs",
+      "workbook-migration-transaction.cjs",
+      "cloud-reset-local.cjs",
+      "workbook-operation-gate.cjs",
+      "private-workbook-bootstrap.cjs",
+      "private-workbook-bootstrap-main.cjs",
+      "packaged-smoke-runtime.cjs",
+      "updater-core.cjs",
+      "updater-helper.cjs",
+      "update-receipt.cjs",
+      "inventory/**/*",
+      "!inventory/assets/images/**/*",
+      {
+        "from": "inventory/assets/images",
+        "to": "inventory/assets/images",
+        "filter": [
+          "edited-*.webp"
+        ]
+      },
+      "!node_modules/sharp-win7/vendor/**/include/**/*",
+      "!node_modules/sharp-win7/src/**/*",
+      "build/**/*"
+    ],
+    "win": {
+      "icon": "build/tek-stock-logo.ico",
+      "target": [
+        {
+          "target": "msi",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "msi": {
+      "artifactName": "TEK-STOCK-Singapore-${version}-${arch}.${ext}",
+      "oneClick": false,
+      "perMachine": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "TEK STOCK",
+      "runAfterFinish": false,
+      "warningsAsErrors": false
+    }
+  },
+  "dependencies": {
+    "exceljs": "^4.4.0",
+    "sharp": "^0.34.4",
+    "sharp-win7": "npm:sharp@0.32.6"
+  }
+}

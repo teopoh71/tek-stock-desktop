@@ -1,0 +1,6 @@
+{
+  "apiBaseUrl": "https://inventory-api.example.com",
+  "apiFallbackBaseUrls": ["https://inventory-api-fallback.example.com"],
+  "authorityId": "tek-stock-hangzhou-v1",
+  "ossPublicBaseUrl": "https://example-bucket.oss-cn-hangzhou.aliyuncs.com"
+}

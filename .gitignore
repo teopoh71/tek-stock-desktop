@@ -1,0 +1,42 @@
+
+# Codex local configuration
+.codex/
+
+# Claude Flow runtime data
+.claude-flow/data/
+.claude-flow/logs/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Generated installers and packaged application output
+node_modules/
+dist/
+dist-remote/
+dist-update/
+out/
+release/
+*.exe
+*.msi
+*.asar
+*.blockmap
+
+# Business inventory, workbook snapshots, and local test data
+inventory/inventory-data.json
+inventory/inventory-data.js
+inventory/alibaba-cloud.json
+inventory/assets/images/
+seed/
+test-user-data/
+test-user-data-v1598/
+
+# Local diagnostics and release metadata
+diagnostics/
+*.log
+release-latest-*.json
+
+# Local agent/runtime state
+.agents/
+.superpowers/

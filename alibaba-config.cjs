@@ -19,8 +19,7 @@ function normalizeEndpoint(value, name, allowMissing) {
   if (!text && allowMissing) return "";
   let url;
   try { url = new URL(text); } catch { throw configError(`${name} must be an HTTPS URL`); }
-  if (url.protocol !== "https:"
-      && !(options.allowHttp === true && url.protocol === "http:")) {
+  if (url.protocol !== "https:" || url.username || url.password || url.search || url.hash) {
     throw configError(`${name} must be a credential-free HTTPS URL`);
   }
   const host = url.hostname.toLowerCase();

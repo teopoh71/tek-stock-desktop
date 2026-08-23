@@ -14,6 +14,39 @@ const appSource = fs.readFileSync(
 );
 const mainSource = fs.readFileSync(path.join(__dirname, "..", "main.cjs"), "utf8");
 
+function functionBody(source, name, nextMarker = "") {
+  const start = source.indexOf(`async function ${name}(`);
+  if (start < 0) return "";
+  const open = source.indexOf("{", start);
+  if (open < 0) return "";
+  let depth = 0;
+  let quote = "";
+  let escaped = false;
+  for (let index = open; index < source.length; index += 1) {
+    const char = source[index];
+    if (quote) {
+      if (escaped) escaped = false;
+      else if (char === "\\") escaped = true;
+      else if (char === quote) quote = "";
+      continue;
+    }
+    if (char === '"' || char === "'" || char === "`") {
+      quote = char;
+      continue;
+    }
+    if (char === "{") depth += 1;
+    if (char === "}") {
+      depth -= 1;
+      if (depth === 0) return source.slice(open + 1, index);
+    }
+  }
+  if (nextMarker) {
+    const end = source.indexOf(nextMarker, open + 1);
+    if (end >= 0) return source.slice(open + 1, end);
+  }
+  return "";
+}
+
 test("Excel-origin upload uses the fast acknowledgement path once", () => {
   assert.match(
     appSource,
@@ -57,9 +90,7 @@ test("a new Excel model stays explicitly pending when acknowledgement fails", ()
 });
 
 test("Update performs one central workbook sync then refreshes cloud", () => {
-  const updateBody = appSource.match(
-    /async function updateInventory\(\)\s*\{([\s\S]*?)\r?\n  \}\r?\n\r?\n  el\.searchInput/,
-  )?.[1] || "";
+  const updateBody = functionBody(appSource, "updateInventory");
   assert.equal((updateBody.match(/await syncWorkbookWithTokenRetry\(\)/g) || []).length, 1);
   assert.match(
     updateBody,
@@ -69,9 +100,7 @@ test("Update performs one central workbook sync then refreshes cloud", () => {
 });
 
 test("Update reports success only after the workbook matches confirmed cloud data", () => {
-  const updateBody = appSource.match(
-    /async function updateInventory\(\)\s*\{([\s\S]*?)\r?\n  \}\r?\n\r?\n  el\.searchInput/,
-  )?.[1] || "";
+  const updateBody = functionBody(appSource, "updateInventory");
   assert.match(updateBody, /if \(synced\.workbookAcknowledged !== true\)/);
   assert.match(updateBody, /WORKBOOK_REFRESH_PENDING/);
   assert.match(
@@ -81,9 +110,7 @@ test("Update reports success only after the workbook matches confirmed cloud dat
 });
 
 test("automatic cloud refresh uses guarded central sync while legacy writes remain pending-gated", () => {
-  const automaticBody = appSource.match(
-    /async function synchronizeCloudAutomatically\(\)\s*\{([\s\S]*?)\r?\n  \}\r?\n\r?\n  async function updateInventory/,
-  )?.[1] || "";
+  const automaticBody = functionBody(appSource, "synchronizeCloudAutomatically");
   assert.match(
     automaticBody,
     /if\s*\(window\.TekStockCloud\?\.syncWorkbook\)[\s\S]*?await syncWorkbookWithTokenRetry\(\)/,
@@ -95,9 +122,7 @@ test("automatic cloud refresh uses guarded central sync while legacy writes rema
 });
 
 test("manual workbook sync replaces a rejected stored token and retries only once", () => {
-  const retryBody = appSource.match(
-    /async function syncWorkbookWithTokenRetry\(authRetry = false\)\s*\{([\s\S]*?)\n  \}\n\n/,
-  )?.[1] || "";
+  const retryBody = functionBody(appSource, "syncWorkbookWithTokenRetry");
   assert.match(retryBody, /await window\.TekStockCloud\.syncWorkbook\(\)/);
   assert.match(retryBody, /isUploadTokenRejection\(error\)/);
   assert.match(retryBody, /await clearRejectedDesktopUploadToken\(\)/);
@@ -155,9 +180,7 @@ test("workbook identity count mismatches remain a visible review block", () => {
 });
 
 test("bootstrap does not rewrite Excel again after initializeExcel decides the path", () => {
-  const bootstrapBody = appSource.match(
-    /async function bootstrap\(\)\s*\{([\s\S]*?)\n  \}\n\n  bootstrap\(\)/,
-  )?.[1] || "";
+  const bootstrapBody = functionBody(appSource, "bootstrap");
   assert.match(bootstrapBody, /await initializeExcel\(\)/);
   assert.doesNotMatch(bootstrapBody, /await syncExcelFromApp\(/);
 });

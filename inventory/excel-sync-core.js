@@ -425,6 +425,20 @@
     return sameCanonicalPhoto(left, right);
   }
 
+  function sameDeletionGuardItem(liveItem, baselineItem) {
+    if (cleanText(liveItem?.id) !== cleanText(baselineItem?.id)) return false;
+    for (const field of THREE_WAY_FIELDS) {
+      if (field === "image" || field === "sellingPriceText") continue;
+      if (!sameFieldMergeValue(field, liveItem?.[field], baselineItem?.[field])) return false;
+    }
+    // Storage URLs and source/provenance text can legitimately change when the
+    // runtime/backend changes. Only a canonical photo identity proves a photo
+    // mutation strongly enough to block a deletion.
+    if (hasCanonicalPhotoIdentity(baselineItem)
+        && !sameCanonicalPhoto(liveItem, baselineItem)) return false;
+    return true;
+  }
+
   function itemMap(source) {
     if (source instanceof Map) return new Map(source);
     if (Array.isArray(source)) {
@@ -450,7 +464,7 @@
       const liveItem = live.get(id);
       if (!excelItem) {
         if (!liveItem) continue;
-        const liveChanged = !sameCanonicalSyncItem(liveItem, baselineItem);
+        const liveChanged = !sameDeletionGuardItem(liveItem, baselineItem);
         if (liveChanged) {
           conflicts.push({ id, reason: "delete-modified-live" });
         } else {

@@ -41,9 +41,15 @@ test("Windows 7 build uses the last supported Electron major and compatible Shar
   assert.equal(config.files.includes("!node_modules/sharp-win7/**/*"), false);
 });
 
-test("release preflight accepts template-only runtime cloud configuration", () => {
+test("release preflight accepts template-only or valid packaged cloud configuration", () => {
   assert.doesNotThrow(() => verifyRuntimeConfigTemplate(root));
-  assert.equal(verifySourceCloudConfig(root), null);
+  const sourceConfig = verifySourceCloudConfig(root);
+  if (sourceConfig !== null) {
+    // A packaged config may ship non-secret production endpoints so every
+    // install syncs out of the box; it must still pass the strict audit.
+    assert.match(sourceConfig.apiBaseUrl, /^https:\/\//);
+    assert.match(sourceConfig.ossPublicBaseUrl, /^https:\/\//);
+  }
 });
 
 async function minimalArchive(directory, options = {}) {

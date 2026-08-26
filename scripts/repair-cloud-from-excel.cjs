@@ -1,4 +1,4 @@
-"use strict";
+﻿"use strict";
 
 process.env.TEK_STOCK_TEST = "1";
 
@@ -11,9 +11,9 @@ const { isSafeRemotePayload } = require("../inventory/remote-payload-safety.js")
 
 const workbookPath = path.join(process.env.USERPROFILE, "Documents", "TEK STOCK", "TEK-STOCK-LIVE.xlsx");
 const credentialsPath = path.join(process.env.APPDATA, "samlee-inventory-desktop", "sync-credentials.json");
-const dataUrl = "https://tek-stock-sync.teopoh72.workers.dev/data";
-const uploadUrl = "https://tek-stock-sync.teopoh72.workers.dev/upload";
-const imageUrl = "https://tek-stock-sync.teopoh72.workers.dev/image";
+const dataUrl = "https://tek-stock-cloudflare-sync.teopoh72.workers.dev/data";
+const uploadUrl = "https://tek-stock-cloudflare-sync.teopoh72.workers.dev/upload";
+const imageUrl = "https://tek-stock-cloudflare-sync.teopoh72.workers.dev/image";
 const commit = process.argv.includes("--commit");
 const deleteTests = process.argv.includes("--delete-tests");
 const repairPhotos = process.argv.includes("--repair-photos");
@@ -135,3 +135,4 @@ app.whenReady().then(() => run().then(
     app.exit(1);
   },
 ));
+

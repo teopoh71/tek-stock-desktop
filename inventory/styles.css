@@ -325,3 +325,16 @@ h1 { margin: 0; font-family: Georgia, "Noto Serif TC", serif; font-size: clamp(2
 .image-preview-close { position: absolute; top: 14px; right: 14px; }
 .detail-dialog #detailImage { cursor: zoom-in; }
 @media print { .image-preview-dialog { display: none !important; } }
+
+
+/* Non-modal recovery keeps the inventory screen usable. */
+.recovery-panel { position: fixed; right: 20px; bottom: 20px; z-index: 90; width: min(480px, calc(100vw - 40px)); max-height: 60vh; overflow: auto; padding: 22px; border: 1px solid #cba875; border-radius: 16px; background: #fffaf0; color: #242721; box-shadow: 0 12px 38px #24272125; }
+.recovery-panel[hidden] { display: none; }
+.recovery-panel h2 { margin: 0 0 10px; font-size: 20px; }
+.recovery-panel p { margin: 8px 0; line-height: 1.6; }
+.recovery-panel small { color: #686353; }
+.recovery-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+.recovery-actions button { padding: 10px 14px; cursor: pointer; border: 1px solid #cbc8ba; border-radius: 8px; color: #24342a; background: white; font: inherit; }
+.recovery-actions button:first-child { color: white; background: #365445; border-color: #365445; }
+.recovery-actions button:focus-visible { outline: 3px solid #cf944e; outline-offset: 2px; }
+.recovery-actions button:disabled { opacity: .55; cursor: wait; }

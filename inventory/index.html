@@ -20,7 +20,7 @@
       </div>
       <div class="header-actions">
         <div class="version-badge" aria-label="Application and cloud versions">
-            <span>App v1.6.07</span>
+            <span>App v1.6.08</span>
           <span id="cloudVersion">Cloud v0</span>
           <span class="update-receipt" id="updateReceipt">Update check pending</span>
         </div>
@@ -192,6 +192,7 @@
         <div><dt>云端</dt><dd id="syncConflictCloud"></dd></div>
       </dl>
       <div class="sync-token-actions">
+        <button type="submit" value="cancel">稍后处理</button>
         <button type="submit" value="keep-excel">保留 Excel</button>
         <button class="sync-token-save" type="submit" value="keep-cloud">保留云端</button>
       </div>
@@ -224,7 +225,7 @@
       diagnosticsUrl: "",
       uploadToken: "",
       feedbackToken: "",
-        appVersion: "1.6.07",
+        appVersion: "1.6.08",
       readOnly: false,
       deploymentNote: "Alibaba Function Compute + Tablestore authority; OSS photos and installers"
     };
@@ -238,6 +239,7 @@
   <script src="conflict-resolution.js?v=20260805-conflict-resolution-v1"></script>
   <script src="filter-sort-core.js?v=20260807-photo-multifilter-v1"></script>
   <script src="inventory-data.js?v=20260726-exact-photo-sync-v3"></script>
+  <script src="recovery-core.js?v=20260918"></script>
   <script src="app.js?v=20260807-workbook-identity-v1"></script>
 </body>
 </html>

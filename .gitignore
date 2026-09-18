@@ -40,3 +40,9 @@ release-latest-*.json
 # Local agent/runtime state
 .agents/
 .superpowers/
+
+maintenance.defaults.json
+maintenance-worker/wrangler.jsonc
+maintenance-worker/*.local.*
+recovery-*.log
+recovery-preview.png

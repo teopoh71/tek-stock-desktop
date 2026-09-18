@@ -34,7 +34,7 @@ function sanitizeUpdateReceipt(input = {}, now) {
   return {
     schemaVersion: 1,
     timestamp: timestamp.toISOString(),
-    action: ["check", "user_update", "user_reinstall"].includes(value.action) ? value.action : "check",
+    action: ["check", "user_update", "user_reinstall", "auto_update"].includes(value.action) ? value.action : "check",
     checkRan: value.checkRan === true,
     currentVersion: safeVersion(value.currentVersion),
     availableVersion: safeVersion(value.availableVersion),

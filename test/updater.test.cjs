@@ -161,6 +161,8 @@ test("manifest check retries bounded Hangzhou OSS primary then falls back to Sin
   const receipts = [];
   const bytes = Buffer.from("msi");
   registerUpdaterIpc({
+    manifestUrls: [require("../updater-core.cjs").DEFAULT_MANIFEST_URL, require("../updater-core.cjs").FALLBACK_MANIFEST_URL],
+    installSafely: operation => operation(),
     ipcMain: { handle: (name, handler) => handlers.set(name, handler) },
     app: {
       getPath: () => os.tmpdir(),
@@ -200,6 +202,8 @@ test("failed manifest check still returns and stores a concrete receipt", async 
   const handlers = new Map();
   const receipts = [];
   registerUpdaterIpc({
+    manifestUrls: [require("../updater-core.cjs").DEFAULT_MANIFEST_URL, require("../updater-core.cjs").FALLBACK_MANIFEST_URL],
+    installSafely: operation => operation(),
     ipcMain: { handle: (name, handler) => handlers.set(name, handler) },
     app: { getPath: () => os.tmpdir(), getVersion: () => "1.5.52" },
     manifestUrls: ["https://example.test/latest.json"],
@@ -225,6 +229,8 @@ test("Update does not download or launch when the installed app is current", asy
   let launches = 0;
   const bytes = Buffer.from("msi");
   registerUpdaterIpc({
+    manifestUrls: [require("../updater-core.cjs").DEFAULT_MANIFEST_URL, require("../updater-core.cjs").FALLBACK_MANIFEST_URL],
+    installSafely: operation => operation(),
     ipcMain: { handle: (name, handler) => handlers.set(name, handler) },
     app: { getPath: () => os.tmpdir(), getVersion: () => "1.6.0" },
     osRelease: "10.0",
@@ -261,6 +267,8 @@ test("Update downloads and launches only a verified newer MSI", async (t) => {
   let exitCode = null;
   const bytes = Buffer.from("new-msi");
   registerUpdaterIpc({
+    manifestUrls: [require("../updater-core.cjs").DEFAULT_MANIFEST_URL, require("../updater-core.cjs").FALLBACK_MANIFEST_URL],
+    installSafely: operation => operation(),
     ipcMain: { handle: (name, handler) => handlers.set(name, handler) },
     app: {
       getPath: (name) => name === "temp" ? root : path.join(root, "user-data"),
@@ -308,6 +316,8 @@ test("reinstall IPC downloads selected MSI, exits the app, then delegates instal
   const bytes = Buffer.from("msi");
 
   registerUpdaterIpc({
+    manifestUrls: [require("../updater-core.cjs").DEFAULT_MANIFEST_URL, require("../updater-core.cjs").FALLBACK_MANIFEST_URL],
+    installSafely: operation => operation(),
     ipcMain: { handle: (name, handler) => handlers.set(name, handler) },
     app: {
       getPath: (name) => name === "temp" ? root : path.join(root, "user-data"),
@@ -359,4 +369,41 @@ test("reinstall IPC downloads selected MSI, exits the app, then delegates instal
   assert.equal(receipts.at(-1).launchOutcome, "queued");
   assert.equal(receipts.at(-1).currentVersion, "1.5.12");
   assert.equal(receipts.at(-1).availableVersion, "1.6.0");
+});
+
+
+test('failed backup or busy guard never launches installer or exits the application', async (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'tek-install-guard-'));
+  t.after(() => fs.rmSync(root, {recursive:true,force:true}));
+  for (const code of ['UPDATE_BACKUP_FAILED','UPDATE_BUSY','UPDATE_PENDING_SYNC']) {
+    const handlers = new Map(); let launches=0, exits=0;
+    registerUpdaterIpc({
+      ipcMain: { handle:(name,fn)=>handlers.set(name,fn) },
+      app: { getPath:()=>root, getVersion:()=> '1.5.99', exit:()=>{exits++} },
+      fetchReleaseManifest: async()=>manifestFor(Buffer.from('installer')),
+      downloadVerifiedInstaller: async(_release,destination)=>({path:destination,bytes:9}),
+      installSafely: async()=>{throw Object.assign(new Error(code),{code})},
+      spawn:()=>{launches++}, writeUpdateReceipt:x=>x, tempPath:root,userDataPath:root,
+    });
+    const result=await handlers.get('tek-stock-updater-update')();
+    assert.equal(result.ok,false);assert.equal(result.errorCode,code);assert.equal(launches,0);assert.equal(exits,0);
+  }
+});
+
+test('reinstall refuses a stale release and configured channel never falls back to legacy authority', async()=>{
+  const handlers=new Map(), urls=[]; let downloads=0;
+  registerUpdaterIpc({ipcMain:{handle:(name,fn)=>handlers.set(name,fn)}, app:{getPath:()=>os.tmpdir(),getVersion:()=> '1.7.0'},
+    manifestUrl:'https://new-channel.test/latest.json', fetchReleaseManifest:async url=>{urls.push(url);return manifestFor(Buffer.from('msi'))},
+    downloadVerifiedInstaller:async()=>{downloads++},writeUpdateReceipt:x=>x});
+  const result=await handlers.get('tek-stock-updater-reinstall')();assert.equal(result.errorCode,'UPDATE_DOWNGRADE_BLOCKED');assert.equal(downloads,0);
+  assert.deepEqual(urls,['https://new-channel.test/latest.json']);
+});
+
+test('download disk errors reject promptly without removing a pre-existing file', async t=>{
+ const root=fs.mkdtempSync(path.join(os.tmpdir(),'tek-disk-'));
+ t.after(()=>fs.rmSync(root,{recursive:true,force:true}));
+ const bytes=Buffer.from('installer'),release=selectWindowsChannel(manifestFor(bytes),'10.0');
+ const target=path.join(root,'existing.msi');fs.writeFileSync(target,'keep me');
+ await assert.rejects(downloadVerifiedInstaller(release,target,{https:fakeHttps(bytes)}),{code:'EEXIST'});
+ assert.equal(fs.readFileSync(target,'utf8'),'keep me');
 });

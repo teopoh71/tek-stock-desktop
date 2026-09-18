@@ -4,6 +4,8 @@ const fs = require("node:fs");
 const path = require("node:path");
 const https = require("node:https");
 const { createHash } = require("node:crypto");
+const { Transform } = require("node:stream");
+const { pipeline } = require("node:stream/promises");
 
 const DEFAULT_MANIFEST_URL = "https://tek-stock-releases-cn-20260801.oss-cn-hangzhou.aliyuncs.com/releases/latest.json";
 const FALLBACK_MANIFEST_URL = "https://tek-stock-releases-sg-20260729.oss-ap-southeast-1.aliyuncs.com/releases/latest.json";
@@ -53,6 +55,7 @@ function selectWindowsChannel(release, osRelease = "") {
   if (!desktop || typeof desktop !== "object" || Array.isArray(desktop)) {
     throw updaterError("UPDATE_MANIFEST_DESKTOP_MISSING");
   }
+  if (!/^\d+\.\d+\.\d+$/.test(String(desktop.version || ""))) throw updaterError("UPDATE_VERSION_INVALID");
   const selected = desktop[key];
   if (!selected || typeof selected !== "object" || Array.isArray(selected)) {
     throw updaterError("UPDATE_MANIFEST_CHANNEL_MISSING");
@@ -224,21 +227,24 @@ async function downloadVerifiedInstaller(release, destination, options = {}) {
   }
   const hash = createHash("sha256");
   let bytes = 0;
+  let created = false;
   const output = fs.createWriteStream(target, { flags: "wx", mode: 0o600 });
+  output.once("open", () => { created = true; });
   try {
-    for await (const chunk of response) {
-      bytes += chunk.length;
-      if (bytes > maxBytes) throw updaterError("UPDATE_INSTALLER_TOO_LARGE");
-      hash.update(chunk);
-      if (!output.write(chunk)) await new Promise((resolve) => output.once("drain", resolve));
-    }
-    await new Promise((resolve, reject) => output.end((error) => error ? reject(error) : resolve()));
+    await pipeline(response, new Transform({
+      transform(chunk, _encoding, callback) {
+        bytes += chunk.length;
+        if (bytes > maxBytes) return callback(updaterError("UPDATE_INSTALLER_TOO_LARGE"));
+        hash.update(chunk);
+        callback(null, chunk);
+      },
+    }), output);
     if (expectedSize && bytes !== expectedSize) throw updaterError("UPDATE_DOWNLOAD_SIZE_MISMATCH");
     if (hash.digest("hex") !== release.sha256) throw updaterError("UPDATE_SHA256_MISMATCH");
     return { path: target, bytes };
   } catch (error) {
     output.destroy();
-    try { fs.rmSync(target, { force: true }); } catch {}
+    if (created) { try { fs.rmSync(target, { force: true }); } catch {} }
     throw error?.code ? error : updaterError("UPDATE_DOWNLOAD_FAILED", error?.code);
   }
 }

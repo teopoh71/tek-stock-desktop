@@ -1,0 +1,16 @@
+const path=require('node:path'); const root=path.resolve(__dirname,'..'); const {chromium}=require('playwright'); const fs=require('fs'); const assert=require('assert/strict');
+(async()=>{ const browser=await chromium.launch({headless:true,executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe',args:['--no-sandbox']}); const page=await browser.newPage({viewport:{width:1200,height:800}}); const errors=[];page.on('pageerror',e=>errors.push(e.message));
+await page.setContent('<html lang="zh-CN"><body><main><h1>TEK STOCK 新加坡库存</h1><input id="search" placeholder="搜索库存"><p>库存页面保持可操作</p></main></body></html>');
+await page.addStyleTag({content:fs.readFileSync(path.join(root,'inventory/styles.css'),'utf8')});
+await page.addScriptTag({path:path.join(root,'inventory/recovery-core.js')});
+await page.evaluate(()=>{window.calls=[];window.ui=TekStockRecovery.mount(document,{retry:async()=>{calls.push('retry');return false},report:async()=>({ok:false,errorCode:'DIAGNOSTICS_NOT_CONFIGURED'}),conflicts:async()=>{calls.push('conflicts');return false},excel:async()=>true,auth:async()=>true,update:async()=>true,folder:async()=>true,help:async()=>true},{timeoutMs:100});ui.show('API_NETWORK_UNREACHABLE')});
+assert.equal(await page.locator('#recoveryPanel').isVisible(),true);await page.locator('#search').fill('仍可搜索');assert.equal(await page.locator('#search').inputValue(),'仍可搜索');
+await page.getByRole('button',{name:'发送诊断',exact:true}).click();await page.waitForTimeout(30);assert.match(await page.locator('#recoveryPanel').innerText(),/尚未配置/);
+await page.getByRole('button',{name:'稍后处理，继续查看',exact:true}).click();assert.equal(await page.locator('#recoveryPanel').isVisible(),false);
+await page.evaluate(()=>ui.show('API_NETWORK_UNREACHABLE'));assert.equal(await page.locator('#recoveryPanel').isVisible(),false);
+await page.evaluate(()=>ui.reopen());assert.equal(await page.locator('#recoveryPanel').isVisible(),true);
+await page.evaluate(()=>ui.show('EXCEL_THREE_WAY_CONFLICT'));await page.getByRole('button',{name:'查看并选择冲突资料',exact:true}).click();assert.deepEqual(await page.evaluate(()=>calls),['conflicts']);
+await page.screenshot({path:path.join(root,'recovery-preview.png')});
+await page.evaluate(()=>{ui.clear();window.ui=TekStockRecovery.mount(document,{retry:()=>new Promise(()=>{})},{timeoutMs:100});ui.show('API_NETWORK_UNREACHABLE')});
+const panels=page.locator('.recovery-panel');const latest=panels.last();await latest.getByRole('button',{name:'重试连接与同步',exact:true}).click();await page.waitForTimeout(170);assert.equal(await latest.getByRole('button',{name:'重试连接与同步',exact:true}).isEnabled(),true);assert.match(await latest.innerText(),/后台操作可能仍在进行/);
+assert.deepEqual(errors,[]);console.log(JSON.stringify({passed:8,browserErrors:errors,checks:['non-modal search','diagnostic not configured truth','later dismiss','duplicate suppressed','reopen','conflict action','bounded timeout','buttons restored']}));await browser.close();})().catch(e=>{console.error(e);process.exit(1)});

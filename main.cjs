@@ -86,6 +86,79 @@ const {
 } = require("./cloud-reset-local.cjs");
 const { createWorkbookOperationGate } = require("./workbook-operation-gate.cjs");
 
+const { createDiagnosticsOutbox } = require("./diagnostics-outbox.cjs");
+const { readMaintenanceConfig, postDiagnostics } = require("./maintenance-config.cjs");
+const { assertIdle, createUpdateBackup, updateError } = require("./safe-update.cjs");
+const diagnosticQueues = new Map();
+let rendererMaintenanceState = { seenAt: 0, safe: false };
+let maintenanceTimer;
+let activeCloudOperations = 0;
+let installingUpdate = false;
+async function trackCloudOperation(operation) {
+  if (installingUpdate) throw updateError("UPDATE_BUSY");
+  activeCloudOperations += 1;
+  try { return await operation(); } finally { activeCloudOperations -= 1; }
+}
+function diagnosticsFor(directory) {
+  if (!diagnosticQueues.has(directory)) {
+    const config = () => readMaintenanceConfig(directory);
+    const token = () => readUserEnvironmentSecret("TEK_STOCK_DIAGNOSTICS_TOKEN")
+      || readUserEnvironmentSecret("TEK_STOCK_FEEDBACK_TOKEN")
+      || readStoredUploadToken() || readUserEnvironmentSecret("TEK_STOCK_UPLOAD_TOKEN");
+    diagnosticQueues.set(directory, createDiagnosticsOutbox({
+      directory: path.join(directory, "diagnostics"),
+      configured: () => Boolean(config().diagnosticsUrl && token()),
+      send: events => postDiagnostics(config().diagnosticsUrl, token(), events, electronNet),
+    }));
+  }
+  return diagnosticQueues.get(directory);
+}
+function registerMaintenanceIpc() {
+  const directory = app.getPath("userData");
+  ipcMain.handle("tek-stock-maintenance-status", () => ({
+    ...diagnosticsFor(directory).status(), autoUpdate: readMaintenanceConfig(directory).autoUpdate,
+  }));
+  ipcMain.handle("tek-stock-diagnostics-send", () => diagnosticsFor(directory).flush(true));
+  ipcMain.handle("tek-stock-maintenance-state", (event, state) => {
+    if (!mainWindow || event.sender !== mainWindow.webContents) return { ok: false };
+    rendererMaintenanceState = { seenAt: Date.now(), safe: state?.safe === true,
+      idleMs: Math.max(0, Math.min(86400000, Number(state?.idleMs) || 0)) };
+    return { ok: true };
+  });
+  maintenanceTimer = setInterval(() => { void diagnosticsFor(directory).flush().catch(() => {}); }, 30000);
+  maintenanceTimer.unref?.();
+}
+async function withSafeUpdate(install, options = {}) {
+  return workbookOperationGate.runReset(async () => {
+    await writeQueue;
+    const service = centralSyncService();
+    const file = workbookPath();
+    assertIdle({
+      known: Date.now() - rendererMaintenanceState.seenAt < 4000,
+      unsaved: !rendererMaintenanceState.safe,
+      busy: activeCloudOperations > 0 || workbookSyncRunning || Boolean(pendingWorkbookChange)
+        || (options.automatic && rendererMaintenanceState.idleMs < 120000),
+      pending: service.outbox.retryable().length,
+      conflicts: rawConflictEntries(service).length,
+      workbookLocked: isWorkbookLocked(file),
+    });
+    const location = workbookLocation();
+    const storage = path.join(app.getPath("userData"), "central-sync");
+    const backup = createUpdateBackup({
+      directory: location.backupDirectory, workbook: file, version: app.getVersion(),
+      stateFiles: [path.join(storage, "outbox.json"), path.join(storage, "last-good-snapshot.json")],
+    });
+    if (sha256File(file) !== backup.workbookSha256) throw updateError("UPDATE_BUSY");
+    installingUpdate = true;
+    try {
+      const result = await install();
+      // Keep workbook writes excluded until the queued application exit has run.
+      await new Promise(resolve => setTimeout(resolve, 800));
+      return result;
+    } finally { installingUpdate = false; }
+  });
+}
+
 const WORKBOOK_NAME = "TEK-STOCK-LIVE.xlsx";
 const CREDENTIALS_NAME = "sync-credentials.json";
 const PACKAGED_IMAGE_SET_VERSION = "20260726-exact-photo-sync-v3";
@@ -375,6 +448,7 @@ function appendDiagnosticEvent(input, options = {}) {
   const file = path.join(directory, `TEK-STOCK-diagnostics-${localDateStamp(now)}.jsonl`);
   const bytes = appendCappedDiagnosticLine(file, line, maxFileBytes);
   pruneDiagnosticFiles(userDataPath, options.maxFiles);
+  try { diagnosticsFor(userDataPath).enqueue(entry); } catch {}
   return { ok: true, path: file, bytes };
 }
 
@@ -2834,30 +2908,30 @@ function registerCentralCloudIpc(options = {}) {
       readWorkbook: options.readWorkbook || readWorkbook,
     }));
   ipc.handle("tek-stock-cloud-identity-migration-apply", (_event, payload) =>
-    applyWorkbookIdentityMigrationIpc(payload, {
+    trackCloudOperation(() => applyWorkbookIdentityMigrationIpc(payload, {
       service: getService(),
       readWorkbook: options.readWorkbook || readWorkbook,
       assignIds: options.assignIds,
       syncWorkbook: options.syncWorkbook,
-    }));
-  ipc.handle("tek-stock-cloud-mutate", async (_event, operations) => {
+    })));
+  ipc.handle("tek-stock-cloud-mutate", (_event, operations) => trackCloudOperation(async () => {
     getService().enqueue(operations);
     await getService().flush();
     return getService().snapshot(false);
-  });
+  }));
   ipc.handle("tek-stock-cloud-list-conflicts", () => listSyncConflicts(getService()));
   ipc.handle("tek-stock-cloud-resolve-conflict", (_event, payload) =>
-    resolveSyncConflictIpc(payload, {
+    trackCloudOperation(() => resolveSyncConflictIpc(payload, {
       service: getService(),
       replaceWorkbook: options.replaceWorkbook || queueWorkbookWrite,
-    }));
-  ipc.handle("tek-stock-cloud-replace-photo", async (_event, payload) => {
+    })));
+  ipc.handle("tek-stock-cloud-replace-photo", (_event, payload) => trackCloudOperation(async () => {
     const request = validatePhotoReplacementPayload(payload);
     return getService().replacePhoto(request.itemId, request.dataUrl, {
       imageSha256: request.imageSha256,
       imageVersion: request.imageVersion,
     });
-  });
+  }));
   ipc.handle("tek-stock-cloud-status", () => ({
     ...readAlibabaCloudConfig(),
     pending: getService().outbox.retryable().length,
@@ -2991,11 +3065,11 @@ function registerUpdaterIpc(options = {}) {
   const ipc = options.ipcMain || ipcMain;
   const appApi = options.app || app;
   const spawnInstaller = options.spawn || spawn;
+  const installSafely = options.installSafely || withSafeUpdate;
   const configuredManifestUrl = options.manifestUrl
-    || process.env.TEK_STOCK_UPDATE_MANIFEST_URL;
+    || readMaintenanceConfig(options.userDataPath || appApi.getPath("userData")).manifestUrl;
   const manifestUrls = [...new Set(options.manifestUrls || [
-    configuredManifestUrl || DEFAULT_MANIFEST_URL,
-    FALLBACK_MANIFEST_URL,
+    ...(configuredManifestUrl ? [configuredManifestUrl] : [DEFAULT_MANIFEST_URL, FALLBACK_MANIFEST_URL]),
   ])];
   const userDataPath = options.userDataPath || appApi.getPath("userData");
   const tempPath = options.tempPath || appApi.getPath("temp");
@@ -3004,6 +3078,7 @@ function registerUpdaterIpc(options = {}) {
   const downloadInstaller = options.downloadVerifiedInstaller || downloadVerifiedInstaller;
   const saveReceipt = options.writeUpdateReceipt || ((receipt) => writeUpdateReceipt(userDataPath, receipt));
   const updaterElectronNet = options.electronNet === undefined ? electronNet : options.electronNet;
+  let preparedInstaller;
   const getReleaseManifest = async () => {
     let lastError;
     for (const url of manifestUrls) {
@@ -3092,15 +3167,26 @@ function registerUpdaterIpc(options = {}) {
           receipt: savedReceipt,
         };
       }
+      if (isVersionNewer(installedVersion, release.version)) throw updateError("UPDATE_DOWNGRADE_BLOCKED");
       receipt = { ...receipt, downloadOutcome: "started" };
       saveReceipt(receipt);
       stage = "update.download";
-      const updateDirectory = fs.mkdtempSync(path.join(tempPath, "TEK-STOCK-update-"));
-      const installerPath = path.join(updateDirectory, release.name);
-      const downloaded = await downloadInstaller(release, installerPath, {
-        userAgent: `TEK-STOCK/${appApi.getVersion()}`,
-        electronNet: updaterElectronNet,
-      });
+      let downloaded;
+      if (preparedInstaller?.sha256 === release.sha256 && fs.existsSync(preparedInstaller.path)
+          && sha256File(preparedInstaller.path) === release.sha256) {
+        downloaded = { path: preparedInstaller.path, bytes: fs.statSync(preparedInstaller.path).size };
+      } else {
+        const updateDirectory = fs.mkdtempSync(path.join(tempPath, "TEK-STOCK-update-"));
+        const installerPath = path.join(updateDirectory, release.name);
+        downloaded = await downloadInstaller(release, installerPath, {
+          userAgent: `TEK-STOCK/${appApi.getVersion()}`,
+          electronNet: updaterElectronNet,
+        });
+        preparedInstaller = { path: downloaded.path, sha256: release.sha256 };
+      }
+      receipt = { ...receipt, downloadOutcome: "verified" };
+      stage = "update.backup";
+      return await installSafely(async () => {
       receipt = { ...receipt, downloadOutcome: "verified", launchOutcome: "started" };
       saveReceipt(receipt);
       stage = "update.launch";
@@ -3139,6 +3225,7 @@ function registerUpdaterIpc(options = {}) {
         message: "Installer verified and queued",
         receipt: savedReceipt,
       };
+      }, { automatic: action === "auto_update" });
     } catch (error) {
       receipt = {
         ...receipt,
@@ -3163,6 +3250,7 @@ function registerUpdaterIpc(options = {}) {
   };
 
   ipc.handle("tek-stock-updater-update", () => downloadAndLaunchUpdate("user_update", true));
+  ipc.handle("tek-stock-updater-auto-update", () => downloadAndLaunchUpdate("auto_update", true));
   ipc.handle("tek-stock-updater-reinstall", () => downloadAndLaunchUpdate("user_reinstall", false));
 }
 
@@ -3298,6 +3386,7 @@ if (isolatedSmokeLoadError) {
       registerCentralCloudIpc();
       registerDiagnosticsIpc();
       registerUpdaterIpc();
+      registerMaintenanceIpc();
       createWindow();
       void centralSyncService().flush().catch(() => {});
       app.on("activate", () => { if (BrowserWindow.getAllWindows().length === 0) createWindow(); });
@@ -3305,6 +3394,7 @@ if (isolatedSmokeLoadError) {
     app.on("window-all-closed", () => { if (process.platform !== "darwin") app.quit(); });
     app.on("before-quit", () => {
       clearTimeout(workbookChangeTimer);
+      clearInterval(maintenanceTimer);
       if (watchedWorkbook) fs.unwatchFile(watchedWorkbook);
     });
   }

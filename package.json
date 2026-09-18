@@ -1,6 +1,6 @@
 {
   "name": "samlee-inventory-desktop",
-  "version": "1.6.7",
+  "version": "1.6.8",
   "description": "TEK STOCK Singapore furniture inventory desktop application",
   "main": "main.cjs",
   "author": "SAMLEE",
@@ -58,7 +58,12 @@
       },
       "!node_modules/sharp-win7/vendor/**/include/**/*",
       "!node_modules/sharp-win7/src/**/*",
-      "build/**/*"
+      "build/**/*",
+      "diagnostic-payload.cjs",
+      "diagnostics-outbox.cjs",
+      "maintenance-config.cjs",
+      "safe-update.cjs",
+      "maintenance.defaults.json"
     ],
     "win": {
       "icon": "build/tek-stock-logo.ico",

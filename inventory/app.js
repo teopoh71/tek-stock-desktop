@@ -128,6 +128,41 @@
 
   updateCloudVersionBadge();
 
+  let recoveryUi;
+  let maintenanceChecking = false;
+  let maintenanceNextCheck = 0;
+  let lastUserActivity = Date.now();
+  function maintenanceState() {
+    return { idleMs: Date.now() - lastUserActivity, safe: !hasPendingEdits() && !excelUploadPending && !automaticSyncActive
+      && !document.querySelector("dialog[open]") && cloudDataState === "live" };
+  }
+  async function reportMaintenanceState() {
+    try { return await window.TekStockMaintenance?.reportState(maintenanceState()); } catch { return { ok: false }; }
+  }
+  function showRecovery(error) {
+    recoveryUi?.show(error);
+    const code = typeof error === "string" ? error : error?.errorCode || error?.code || "UNKNOWN_ERROR";
+    try { void window.TekStockDiagnostics?.append({ stage: "app.error", ok: false, errorCode: code }).catch(() => {}); } catch {}
+  }
+  async function maintenanceCheck() {
+    if (maintenanceChecking || Date.now() < maintenanceNextCheck || Date.now() - lastUserActivity < 120000) return;
+    if (!maintenanceState().safe || !window.TekStockMaintenance) return;
+    maintenanceChecking = true;
+    try {
+      const config = await window.TekStockMaintenance.status();
+      if (!config?.autoUpdate) return;
+      maintenanceNextCheck = Date.now() + 3600000;
+      const status = await window.TekStockUpdater.check();
+      if (!status?.ok) { showRecovery(status); return; }
+      if (!status.isMismatch) return;
+      // Recheck after the asynchronous request; an operator may have resumed work.
+      if (Date.now() - lastUserActivity < 120000 || !maintenanceState().safe) return;
+      await reportMaintenanceState();
+      await applyNewerDesktopUpdate(true);
+    } catch (error) { showRecovery({ errorCode: error?.code || "UPDATE_FAILED" }); }
+    finally { maintenanceChecking = false; }
+  }
+
   function diagnosticSource() {
     return window.InventoryAndroid ? "android" : "desktop";
   }
@@ -185,6 +220,10 @@
       }
     } catch {
       // Diagnostics must never interrupt inventory work.
+    }
+    if (window.TekStockMaintenance) {
+      if (upload) { try { return (await window.TekStockMaintenance.sendDiagnostics())?.ok === true; } catch { return false; } }
+      return true;
     }
     if (!upload || diagnosticsUploadActive || !remoteConfig.feedbackToken) return false;
     const diagnosticsUrl = String(
@@ -1030,6 +1069,7 @@
         window.TekStockCloud.onSynced(async (sync) => {
           if (sync?.workbookAcknowledged !== true) return;
           excelUploadPending = false;
+          recoveryUi?.clear();
           updateCloudVersionBadge();
           await loadRemoteData(false);
         });
@@ -1039,13 +1079,8 @@
           excelUploadPending = true;
           updateCloudVersionBadge();
           console.error("Excel central sync failed", failure?.errorCode || "SYNC_FAILED");
-          try {
-            await conflictResolutionCore?.handleBackgroundSyncConflict?.(
-              resolvePendingSyncConflicts,
-            );
-          } catch (error) {
-            console.error(error);
-          }
+          showRecovery(failure || "SYNC_FAILED");
+          // Background errors are presented in the non-modal recovery panel.
         });
       }
     } catch (error) {
@@ -1057,7 +1092,7 @@
   async function openLiveExcel() {
     if (!window.TekStockExcel) {
       exportXlsx();
-      return;
+      return false;
     }
     const previousText = el.exportButton?.textContent || "Excel";
     try {
@@ -1072,19 +1107,21 @@
         const gated = await excelBootstrapCore.openAfterBootstrap(window.TekStockExcel, openWorkbook);
         if (!gated.ok) {
           toast(gated.message || excelBootstrapMessage(gated.bootstrap?.state));
-          return;
+          return false;
         }
         if (!gated.opened?.ok) throw new Error(gated.opened?.error || "Excel open failed");
         toast(gated.message || "已打开实时 Excel");
-        return;
+        return true;
       }
       toast("正在打开实时 Excel...");
       const result = await openWorkbook();
       if (!result?.ok) throw new Error(result?.error || "Excel open failed");
       toast("已打开实时 Excel");
+      return true;
     } catch (error) {
       console.error(error);
       toast(error.message || "无法打开 Excel");
+      return false;
     } finally {
       if (el.exportButton) {
         el.exportButton.disabled = false;
@@ -1142,6 +1179,7 @@
     button.textContent = "Downloading...";
     toast("Downloading and verifying the latest installer...");
     try {
+      await reportMaintenanceState();
       const result = await window.TekStockUpdater.reinstall();
       renderUpdateReceipt(result?.receipt, true);
       if (!result?.ok) {
@@ -1156,6 +1194,7 @@
       button.disabled = false;
       button.textContent = previousText;
       toast(`Reinstall failed (${code}). Please try again.`);
+      showRecovery(code);
     }
   }
 
@@ -1189,6 +1228,7 @@
   }
 
   function renderDataSyncFailure(errorCode) {
+    showRecovery(errorCode);
     renderUpdateReceipt({
       action: "data_sync",
       currentVersion: remoteConfig.appVersion,
@@ -1201,6 +1241,7 @@
     try {
       const status = await window.TekStockUpdater.check();
       renderUpdateReceipt(status?.receipt, announce);
+      if (announce && status?.ok === false) showRecovery(status);
       const mismatch = status?.ok === true && status?.isMismatch === true;
       el.uploadButton?.classList.remove("version-mismatch");
       el.reinstallButton?.classList.toggle("version-mismatch", mismatch);
@@ -1219,13 +1260,16 @@
     }
   }
 
-  async function applyNewerDesktopUpdate() {
+  async function applyNewerDesktopUpdate(automatic = false) {
     if (!window.TekStockUpdater?.update) {
       await refreshDesktopUpdateAlert(true);
       return;
     }
     try {
-      const result = await window.TekStockUpdater.update();
+      await reportMaintenanceState();
+      const result = automatic
+        ? await window.TekStockUpdater.autoUpdate()
+        : await window.TekStockUpdater.update();
       renderUpdateReceipt(result?.receipt, true);
       if (!result?.ok) {
         const error = new Error(result?.errorCode || "UPDATE_FAILED");
@@ -1236,6 +1280,7 @@
     } catch (error) {
       const code = String(error?.code || error?.message || "UPDATE_FAILED").slice(0, 64);
       toast(`App update failed (${code}). Data sync was still attempted.`);
+      showRecovery(code);
     }
   }
 
@@ -2788,6 +2833,7 @@
     } catch (error) {
       console.error(error);
       cloudLastErrorCode = diagnosticErrorCode(error, "CLOUD_DOWNLOAD_FAILED");
+      showRecovery(cloudLastErrorCode);
       cloudDataState = hasCachedCloudPayload ? "cached" : "offline";
       updateCloudVersionBadge();
       reportDiagnostic("refresh_failed", {
@@ -2853,6 +2899,7 @@
     const cloudLoaded = await loadRemoteData(true);
     if (!cloudLoaded || cloudDataState !== "live") {
       scheduleCloudRetry();
+      showRecovery(cloudLastErrorCode || "CLOUD_UNAVAILABLE");
       toast(`云端未连接（${cloudLastErrorCode || "CLOUD_UNAVAILABLE"}），未读取 Excel，避免覆盖资料`);
       return false;
     }
@@ -3010,7 +3057,17 @@
     el.uploadInput.value = "";
   });
   if (el.printButton) el.printButton.addEventListener("click", printInventory);
-  el.helpButton.addEventListener("click", () => el.helpDialog.showModal());
+  el.helpButton.addEventListener("click", () => { el.helpDialog.showModal(); });
+  const helpRecovery = document.createElement("button");
+  helpRecovery.type = "button"; helpRecovery.textContent = "查看上次问题与处理选项";
+  helpRecovery.addEventListener("click", () => { el.helpDialog.close(); recoveryUi?.reopen(); });
+  el.helpDataLocation.parentElement.append(helpRecovery);
+  const exportDiagnostics = document.createElement("button");
+  exportDiagnostics.type = "button"; exportDiagnostics.textContent = "导出本地诊断";
+  exportDiagnostics.addEventListener("click", async () => {
+    try { await window.TekStockDiagnostics?.export(); } catch { toast("导出未完成，可以稍后重试。"); }
+  });
+  el.helpDataLocation.parentElement.append(exportDiagnostics);
   el.helpClose.addEventListener("click", () => el.helpDialog.close());
   el.helpDialog.addEventListener("click", (event) => {
     if (event.target === el.helpDialog) el.helpDialog.close();
@@ -3052,7 +3109,23 @@
     setInterval(uploadDailyDiagnostic, 60 * 60 * 1000);
   }
 
+  recoveryUi = window.TekStockRecovery?.mount(document, {
+    retry: async () => { await reportMaintenanceState(); return updateInventory(); },
+    update: async () => { const status = await window.TekStockUpdater?.check(); if (!status?.ok) return status || false; renderUpdateReceipt(status.receipt, true); return true; },
+    auth: async () => { const connected = await ensureDesktopUploadToken({ forcePrompt: true }); return connected ? updateInventory() : false; },
+    excel: openLiveExcel,
+    conflicts: resolvePendingSyncConflicts,
+    report: async () => window.TekStockMaintenance?.sendDiagnostics?.() || { ok: false, errorCode: "DIAGNOSTICS_NOT_CONFIGURED" },
+    folder: async () => window.TekStockDiagnostics?.openFolder?.() || { ok: false },
+    help: () => { el.helpDialog.showModal(); return true; },
+  });
+  for (const name of ["pointerdown", "keydown", "input"]) document.addEventListener(name, () => {
+    lastUserActivity = Date.now(); void reportMaintenanceState();
+  }, true);
+  if (window.TekStockMaintenance) {
+    setInterval(() => { void reportMaintenanceState(); }, 1000);
+    setInterval(() => { void maintenanceCheck(); }, 30000);
+    window.addEventListener("online", () => { void window.TekStockMaintenance.sendDiagnostics().catch(() => {}); });
+  }
   bootstrap();
 })();
-
-

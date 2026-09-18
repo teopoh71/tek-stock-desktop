@@ -88,5 +88,13 @@ contextBridge.exposeInMainWorld("TekStockUpdater", {
   check: () => ipcRenderer.invoke("tek-stock-updater-status"),
   receipt: () => ipcRenderer.invoke("tek-stock-updater-receipt"),
   update: () => ipcRenderer.invoke("tek-stock-updater-update"),
+  autoUpdate: () => ipcRenderer.invoke("tek-stock-updater-auto-update"),
   reinstall: () => ipcRenderer.invoke("tek-stock-updater-reinstall"),
+});
+
+
+contextBridge.exposeInMainWorld("TekStockMaintenance", {
+  status: () => ipcRenderer.invoke("tek-stock-maintenance-status"),
+  reportState: state => ipcRenderer.invoke("tek-stock-maintenance-state", { safe: state?.safe === true, idleMs: state?.idleMs }),
+  sendDiagnostics: () => ipcRenderer.invoke("tek-stock-diagnostics-send"),
 });

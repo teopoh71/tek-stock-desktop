@@ -51,6 +51,7 @@ function updateInventoryHarness(overrides = {}) {
     updateCloudVersionBadge: () => {},
     resolvePendingSyncConflicts: async () => false,
     renderDataSyncFailure: () => {},
+    showRecovery: () => {},
     toast: () => {},
     workbookSyncFailureMessage: (error) => error.message,
     console: { error: () => {} },

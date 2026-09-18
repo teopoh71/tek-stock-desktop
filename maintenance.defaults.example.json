@@ -1,0 +1,5 @@
+{
+  "diagnosticsUrl": "https://YOUR-WORKER.workers.dev/v1/diagnostics",
+  "manifestUrl": "https://YOUR-WORKER.workers.dev/releases/latest.json",
+  "autoUpdate": true
+}

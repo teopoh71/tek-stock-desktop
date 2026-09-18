@@ -1,0 +1,21 @@
+{
+  "name": "tek-stock-maintenance",
+  "main": "worker.mjs",
+  "compatibility_date": "2026-09-18",
+  "workers_dev": true,
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "tek-stock-diagnostics",
+      "database_id": "REPLACE_WITH_D1_DATABASE_ID"
+    }
+  ],
+  "triggers": {
+    "crons": [
+      "17 3 * * *"
+    ]
+  },
+  "observability": {
+    "enabled": false
+  }
+}

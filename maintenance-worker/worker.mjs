@@ -3,8 +3,8 @@ const { safeEvent } = payload;
 const json = (data, status = 200) => new Response(JSON.stringify(data), {
   status, headers: { "content-type": "application/json", "cache-control": "no-store" },
 });
-function authorized(request, secret) {
-  return typeof secret === "string" && secret.length >= 24 && request.headers.get("authorization") === `Bearer ${secret}`;
+function authorized(request, secret, minimumLength = 24) {
+  return typeof secret === "string" && secret.length >= minimumLength && request.headers.get("authorization") === `Bearer ${secret}`;
 }
 async function bodyWithinLimit(request) {
   const reader = request.body?.getReader();
@@ -44,7 +44,9 @@ export default {
       return new Response(response.body, { status: 200, headers });
     }
     if (url.pathname === "/v1/diagnostics" && request.method === "POST") {
-      if (!authorized(request, env.INGEST_TOKEN) && !authorized(request, env.SYNC_INGEST_TOKEN)) return json({ error: "UNAUTHORIZED" }, 401);
+      // The existing legacy sync credential is allowed to write sanitized reports only.
+      // Incident reads still require the separate strong monitor credential.
+      if (!authorized(request, env.INGEST_TOKEN) && !authorized(request, env.SYNC_INGEST_TOKEN, 7)) return json({ error: "UNAUTHORIZED" }, 401);
       try {
         const body = await bodyWithinLimit(request);
         if (!Array.isArray(body.events) || !body.events.length || body.events.length > 20) return json({ error: "INVALID_BATCH" }, 400);

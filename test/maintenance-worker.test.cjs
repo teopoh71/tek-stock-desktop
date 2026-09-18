@@ -19,3 +19,15 @@ test("receiver requires ingestion auth, bounds payload, strips untrusted fields 
   assert.equal((await send({ events: [event], padding: "x".repeat(17000) })).status, 400);
   assert.equal((await worker.fetch(new Request("https://service.test/v1/incidents", { headers: { authorization: `Bearer ${env.INGEST_TOKEN}` } }), env)).status, 401);
 });
+
+test("legacy sync credentials can submit reports but cannot read incidents", async () => {
+  const worker = (await import("../maintenance-worker/worker.mjs")).default;
+  const env = { SYNC_INGEST_TOKEN: "legacy7", MONITOR_TOKEN: "m".repeat(32), DB: { prepare: () => ({ bind: () => ({}) }), batch: async () => {} } };
+  const headers = { authorization: "Bearer legacy7" };
+  const event = { id: randomUUID(), appVersion: "1.6.8", stage: "app.error", errorCode: "API_NETWORK_UNREACHABLE" };
+  const response = await worker.fetch(new Request("https://service.test/v1/diagnostics", { method: "POST", headers, body: JSON.stringify({ events: [event] }) }), env);
+  assert.equal(response.status, 202);
+  assert.deepEqual((await response.json()).accepted, [event.id]);
+  assert.equal((await worker.fetch(new Request("https://service.test/v1/incidents", { headers }), env)).status, 401);
+  assert.equal((await worker.fetch(new Request("https://service.test/v1/diagnostics", { method: "POST", headers: { authorization: "Bearer wrong77" }, body: JSON.stringify({ events: [event] }) }), env)).status, 401);
+});

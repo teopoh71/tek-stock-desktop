@@ -7,7 +7,7 @@ Copy maintenance.defaults.example.json to maintenance.defaults.json before packa
 
 Copy maintenance-worker/wrangler.example.jsonc to wrangler.jsonc, provision a D1 database, apply schema.sql, and set INGEST_TOKEN, SYNC_INGEST_TOKEN (optional existing sync token), and MONITOR_TOKEN using Wrangler secrets. Never commit token values or production workbook data. Configure RELEASE_MANIFEST and RELEASE_ASSET_URL as Worker variables only after verifying the released installer. The asset proxy accepts only this repository's GitHub release URLs. There is no silent fallback to the old update channel when a configured channel fails.
 
-Diagnostic authorization prefers TEK_STOCK_DIAGNOSTICS_TOKEN, then the existing feedback token, then the stored upload token or upload environment token. A machine needs a matching token to submit reports. Missing authorization retains reports locally and reports that submission failed.
+Diagnostic authorization prefers TEK_STOCK_DIAGNOSTICS_TOKEN, then the existing feedback token, then the stored upload token or upload environment token. A machine needs a matching token to submit reports. Missing authorization retains reports locally and reports that submission failed. The existing legacy sync credential (minimum seven characters) may submit sanitized reports only; it cannot query incidents. Incident reads require the separate monitor secret of at least 24 characters.
 
 ## Data and update safety
 Only allowlisted error codes/stages, app version, timestamps, and random event IDs leave the desktop. Messages, paths, inventory, photos, usernames, and passwords are excluded. The local queue is atomic, bounded, deduplicated, and retried with backoff. Cloud retention is seven days.

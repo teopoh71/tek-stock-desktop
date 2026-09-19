@@ -23,11 +23,10 @@
   const diagnosticDailyStorageKey = "tek-stock-diagnostic-daily-v1";
   const imageVersion = "20260726-exact-photo-sync-v3";
   const allCategory = "__ALL__";
-  const defaultChairCategory = String.fromCharCode(0x9910, 0x6905);
   const state = {
     query: "",
     stockFilter: "all",
-    selectedCategories: new Set([defaultChairCategory]),
+    selectedCategories: new Set(),
     sortDirection: "desc",
     activeId: "",
   };

@@ -6,6 +6,15 @@ import { fixture } from './test-helper.mjs';
 const record = (id, stock = 1) => ({ id, model: 'TEST-' + id, category: 'test', stock });
 const upsert = id => ({ type: 'upsert', item: record(id) });
 
+test('WebP format detection uses byte offsets even when RIFF size bytes form UTF-8', async () => {
+  const f = fixture();
+  const bytes = Buffer.concat([Buffer.from('RIFF'), Buffer.from([0xc2, 0xa9, 0, 0]), Buffer.from('WEBP'), Buffer.alloc(16)]);
+  const result = await f.call('/admin/photos/test.webp', bytes, { method: 'PUT', headers: { authorization: 'Bearer ' + f.env.ADMIN_TOKEN } });
+  assert.equal(result.status, 200);
+  assert.deepEqual(Buffer.from(await (await f.call('/photos/test.webp')).arrayBuffer()), bytes);
+  f.close();
+});
+
 test('create, identify, delete and persist change events', async () => {
   const f = fixture();
   assert.equal((await f.batch(0, [upsert('test-a')])).status, 200);
@@ -21,6 +30,8 @@ test('unauthorized requests never change inventory', async () => {
   const f = fixture();
   const result = await f.call('/v1/items/batch', { expectedRevision: 0, operations: [upsert('x')] }, { headers: { authorization: 'Bearer invalid' } });
   assert.equal(result.status, 401);
+  assert.equal((await f.call('/v1/snapshot', undefined, { headers: { authorization: '' } })).status, 401);
+  assert.equal((await f.call('/v1/changes?after_revision=0', undefined, { headers: { authorization: '' } })).status, 401);
   assert.equal((await (await f.call('/v1/snapshot')).json()).revision, 0);
   f.close();
 });
@@ -90,4 +101,15 @@ test('import cannot overwrite inventory and missing photos leave no partial data
   assert.equal((await f.call('/admin/import', { revision: 6, items: [record('replacement')] }, options)).status, 409);
   assert.equal((await (await f.call('/v1/snapshot')).json()).items[0].id, 'first');
   f.close();
+});
+
+test('release fallback uses the maintenance binding without forwarding credentials', async () => {
+  const { default: entry } = await import('./worker.mjs');
+  let seen;
+  const result = await entry.fetch(new Request('https://test.invalid/releases/latest.json', {headers:{authorization:'Bearer synthetic-private'}}), {MAINTENANCE:{fetch:async req=>{seen=req;return new Response(JSON.stringify({desktop:{version:'1.6.8'}}),{headers:{'content-type':'application/json'}});}}});
+  assert.equal(result.status, 200);
+  assert.equal(seen.headers.has('authorization'), false);
+  assert.equal(seen.redirect, 'manual');
+  assert.equal(new URL(seen.url).pathname, '/releases/latest.json');
+  assert.equal((await result.json()).desktop.version, '1.6.8');
 });

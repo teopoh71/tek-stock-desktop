@@ -1,0 +1,31 @@
+{
+  "name": "tek-stock-inventory-sg",
+  "main": "worker.mjs",
+  "compatibility_date": "2025-08-01",
+  "workers_dev": true,
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "INVENTORY",
+        "class_name": "Inventory"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": [
+        "Inventory"
+      ]
+    }
+  ],
+  "observability": {
+    "enabled": false
+  },
+  "services": [
+    {
+      "binding": "MAINTENANCE",
+      "service": "tek-stock-maintenance"
+    }
+  ]
+}

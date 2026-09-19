@@ -14,7 +14,7 @@ test('real desktop sync client: add, second-device recognition, photo, delete', 
   const clients = [1, 2].map(number => createCentralSync({
     storageDirectory: path.join(directory, 'client-' + number),
     getApiBaseUrl: () => 'https://test.invalid', getOssBaseUrl: () => 'https://test.invalid',
-    getToken: () => f.env.SYNC_TOKEN, getAuthorityId: () => 'tek-stock-cloudflare',
+    getToken: () => f.env.SYNC_TOKEN, getAuthorityId: () => 'tek-stock-independent-v1',
     fetchImpl: (url, init) => f.service.fetch(new Request(url, init)),
   }));
   t.after(() => { f.close(); fs.rmSync(directory, { recursive: true, force: true }); });
@@ -38,16 +38,17 @@ test('real desktop sync client: add, second-device recognition, photo, delete', 
 
 test('authorization failure retains the operation; corrected credentials allow retry', async t => {
   const f = fixture(), directory = fs.mkdtempSync(path.join(os.tmpdir(), 'tek-auth-test-'));
-  let token = 'wrong-test-token';
+  let token = f.env.SYNC_TOKEN;
   const sync = createCentralSync({ storageDirectory: directory,
     getApiBaseUrl: () => 'https://test.invalid', getToken: () => token,
-    getAuthorityId: () => 'tek-stock-cloudflare', fetchImpl: (url, init) => f.service.fetch(new Request(url, init)),
+    getAuthorityId: () => 'tek-stock-independent-v1', fetchImpl: (url, init) => f.service.fetch(new Request(url, init)),
   });
   t.after(() => { f.close(); fs.rmSync(directory, { recursive: true, force: true }); });
   await sync.snapshot(false);
+  token = 'wrong-test-token';
   sync.enqueue([{ type: 'create', item: { id: 'retry-test', model: 'RETRY TEST', stock: 1 } }]);
   await assert.rejects(sync.flush(), /UNAUTHORIZED/);
-  assert.equal((await sync.canonicalSnapshot()).items.length, 0);
+  assert.equal((await (await f.call('/v1/snapshot')).json()).items.length, 0);
   assert.equal(sync.outbox.retryable().length, 1);
   token = f.env.SYNC_TOKEN; await sync.flush();
   assert.equal((await sync.canonicalSnapshot()).items.length, 1);
@@ -59,7 +60,7 @@ test('concurrent edits to the same stock become a conflict, never silent overwri
   await f.batch(0, [{ type: 'upsert', item: { id: 'conflict-test', model: 'CONFLICT TEST', stock: 1 } }]);
   const sync = createCentralSync({ storageDirectory: directory,
     getApiBaseUrl: () => 'https://test.invalid', getToken: () => f.env.SYNC_TOKEN,
-    getAuthorityId: () => 'tek-stock-cloudflare', fetchImpl: (url, init) => f.service.fetch(new Request(url, init)),
+    getAuthorityId: () => 'tek-stock-independent-v1', fetchImpl: (url, init) => f.service.fetch(new Request(url, init)),
   });
   t.after(() => { f.close(); fs.rmSync(directory, { recursive: true, force: true }); });
   await sync.snapshot(false);

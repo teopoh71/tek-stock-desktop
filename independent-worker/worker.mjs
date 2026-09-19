@@ -1,4 +1,4 @@
-const AUTHORITY = 'tek-stock-cloudflare';
+const AUTHORITY = 'tek-stock-independent-v1';
 const PHOTO_LIMIT = 15_000_000;
 const mimeTypes = { png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', webp: 'image/webp', gif: 'image/gif' };
 const fail = (code, status = 400) => { throw Object.assign(new Error(code), { status }); };
@@ -48,9 +48,9 @@ function photoKey(value) {
 function imageType(bytes) {
   if (bytes[0] === 137 && bytes[1] === 80 && bytes[2] === 78 && bytes[3] === 71) return 'image/png';
   if (bytes[0] === 255 && bytes[1] === 216 && bytes[2] === 255) return 'image/jpeg';
-  const text = new TextDecoder().decode(bytes.slice(0, 12));
-  if (text.startsWith('RIFF') && text.slice(8) === 'WEBP') return 'image/webp';
-  if (text.startsWith('GIF8')) return 'image/gif';
+  const ascii = (offset, value) => Array.from(value).every((character, i) => bytes[offset + i] === character.charCodeAt(0));
+  if (ascii(0, 'RIFF') && ascii(8, 'WEBP')) return 'image/webp';
+  if (ascii(0, 'GIF8')) return 'image/gif';
   fail('PHOTO_FORMAT_INVALID');
 }
 
@@ -119,6 +119,7 @@ export class Inventory {
       const url = new URL(req.url), p = url.pathname;
       if (req.method === 'OPTIONS') return response({}, 200, { 'access-control-allow-methods': 'GET,POST,PUT,OPTIONS', 'access-control-allow-headers': 'authorization,content-type,idempotency-key,x-sync-token,x-tek-stock-authority-id' });
       if (req.method === 'GET' && p === '/health') return response({ ok: true, service: 'tek-stock-independent', schema: 1 });
+      if (['/v1/snapshot', '/v1/changes'].includes(p) && !authorized(req, this.env.SYNC_TOKEN)) fail('UNAUTHORIZED', 401);
       if (req.method === 'GET' && p === '/v1/snapshot') return response(this.snapshot());
       if (req.method === 'GET' && p === '/v1/changes') {
         const revision = Math.max(0, Number(url.searchParams.get('after_revision')) || 0);
@@ -189,5 +190,10 @@ export class Inventory {
 }
 
 export default {
-  async fetch(req, env) { return env.INVENTORY.get(env.INVENTORY.idFromName('singapore')).fetch(req); },
+  async fetch(req, env) {
+    if (req.method === 'GET' && new URL(req.url).pathname === '/releases/latest.json') {
+      return env.MAINTENANCE.fetch(new Request('https://tek-stock-maintenance.teopoh72.workers.dev/releases/latest.json', { headers: { accept: 'application/json' }, redirect: 'manual' }));
+    }
+    return env.INVENTORY.get(env.INVENTORY.idFromName('singapore')).fetch(req);
+  },
 };

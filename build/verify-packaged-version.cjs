@@ -9,6 +9,7 @@ const { validateAlibabaCloudConfig } = require("../alibaba-config.cjs");
 const { createHash } = require("node:crypto");
 
 const REQUIRED_CONCURRENT_RUNTIME = [
+  "node_modules/detect-libc/lib/detect-libc.js",
   "alibaba-config.cjs",
   "api-failover.cjs",
   "central-sync.cjs",

@@ -46,3 +46,8 @@ maintenance-worker/wrangler.jsonc
 maintenance-worker/*.local.*
 recovery-*.log
 recovery-preview.png
+
+# Local Worker runtime state
+.wrangler/
+
+node_modules.shared/

@@ -91,7 +91,7 @@ function createApiRequester(options = {}) {
     const { authorityId, endpoints } = resolveEndpoints();
     const headers = { accept: "application/json", ...(fetchInit.headers || {}) };
     if (authorityId) headers["x-tek-stock-authority-id"] = authorityId;
-    if (write === true) {
+    if (write === true || authorityId === "tek-stock-independent-v1") {
       const token = String(getToken() || "").trim();
       if (!token) throw apiError("SYNC_TOKEN_MISSING");
       headers.authorization = `Bearer ${token}`;

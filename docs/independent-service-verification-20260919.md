@@ -38,3 +38,13 @@ Status: version 1.6.9 installed and verified on the connected Windows computer. 
 - The fallback shares the maintenance service; it is not an independent outage-resilient release store.
 - Idle observation is bounded and is not a guarantee against every possible flicker or future failure.
 - Old service and rollback backups remain available; no automatic choice was made for conflicting business records.
+
+## Explicit uninstall and reinstall acceptance
+
+- User-requested full uninstall executed; absence of the installed executable was verified before reinstalling the same SHA-256-verified 1.6.9 installer.
+- A fresh program/profile/workbook backup preceded uninstall. Workbook bytes were unchanged through uninstall and reinstall.
+- The reinstalled executable was tested with its real existing profile. A uniquely marked temporary Excel product was added, synced with the actual Update button, and located on screen.
+- The same test row was deleted from Excel, synced, and confirmed absent from both the cloud and the product grid.
+- All original cloud records matched exactly and the final Excel semantic fingerprint matched the pre-test fingerprint. Pending operations and conflicts were both zero.
+- Actual Update reported Already up to date for 1.6.9. During a 35-second settled UI observation there were zero grid mutations, image reloads or broken photos.
+- Temporary test record cleanup was verified. Private baselines and test receipts remain outside git.

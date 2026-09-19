@@ -1422,10 +1422,7 @@
       ? filtered
       : filterSortCore.sortItems(filtered, state.sortDirection, { itemStock });
     el.resultCount.textContent = list.length.toLocaleString();
-    el.inventoryGrid.innerHTML = list.map(cardMarkup).join("");
-    el.inventoryGrid.querySelectorAll("img.product-image").forEach((image) => {
-      image.addEventListener("error", handleProductImageError);
-    });
+    window.TekStockGridRender.render(el.inventoryGrid, list, cardMarkup, handleProductImageError);
     el.loadMoreButton.hidden = true;
     el.emptyState.hidden = list.length !== 0;
     updateSummary();

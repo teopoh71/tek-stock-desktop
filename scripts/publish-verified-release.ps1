@@ -31,7 +31,7 @@ function JsonRequest($client,$method,$url,$body=$null){
 $base='https://api.github.com/repos/teopoh71/tek-stock-desktop'
 $res=$gh.GetAsync("$base/releases/tags/$tag").GetAwaiter().GetResult()
 if([int]$res.StatusCode -eq 404){
- $release=JsonRequest $gh POST "$base/releases" @{tag_name=$tag;target_commitish=$commit;name="TEK STOCK $version";draft=$true;prerelease=$false;body="Windows 10/11 x64. Checks verified software updates even after Excel sync fails; keeps the sync failure visible. Preserves existing workbook, credentials, outbox and photo cache. Packaged isolated sync and upgrade checks passed. The reported Singapore UNKNOWN_ERROR remains under investigation."}
+ $release=JsonRequest $gh POST "$base/releases" @{tag_name=$tag;target_commitish=$commit;name="TEK STOCK $version";draft=$true;prerelease=$false;body="Windows 10/11 x64. Follows validated HTTPS download redirects synchronously in Electron. Checks verified software updates even after Excel sync fails; keeps the sync failure visible. Preserves existing workbook, credentials, outbox and photo cache. Packaged isolated sync and upgrade checks passed. The reported Singapore UNKNOWN_ERROR remains under investigation."}
 }else{
  if(!$res.IsSuccessStatusCode){throw 'RELEASE_ACCESS_FAILED'}
  $release=$res.Content.ReadAsStringAsync().GetAwaiter().GetResult()|ConvertFrom-Json
@@ -54,12 +54,14 @@ $release=JsonRequest $gh PATCH "$base/releases/$($release.id)" @{draft=$false}
 $origin=$asset[0].browser_download_url
 $public=[System.Net.Http.HttpClient]::new()
 $public.Timeout=[TimeSpan]::FromMinutes(6)
-$r=$public.GetAsync($origin).GetAwaiter().GetResult()
-if(!$r.IsSuccessStatusCode){throw "PUBLIC_ASSET_HTTP_$([int]$r.StatusCode)"}
 $download=Join-Path $root "outputs\verified-$name"
-$bytes=$r.Content.ReadAsByteArrayAsync().GetAwaiter().GetResult()
-[IO.File]::WriteAllBytes($download,$bytes)
-if($bytes.Length -ne $size -or (Get-FileHash -Algorithm SHA256 $download).Hash.ToLowerInvariant() -ne $hash){throw 'PUBLIC_ASSET_VERIFICATION_FAILED'}
+if(!(Test-Path $download) -or (Get-Item $download).Length -ne $size -or (Get-FileHash -Algorithm SHA256 $download).Hash.ToLowerInvariant() -ne $hash){
+ $r=$public.GetAsync($origin).GetAwaiter().GetResult()
+ if(!$r.IsSuccessStatusCode){throw "PUBLIC_ASSET_HTTP_$([int]$r.StatusCode)"}
+ $bytes=$r.Content.ReadAsByteArrayAsync().GetAwaiter().GetResult()
+ [IO.File]::WriteAllBytes($download,$bytes)
+}
+if((Get-Item $download).Length -ne $size -or (Get-FileHash -Algorithm SHA256 $download).Hash.ToLowerInvariant() -ne $hash){throw 'PUBLIC_ASSET_VERIFICATION_FAILED'}
 Write-Output "PUBLIC_ASSET_VERIFIED $version $size $hash"
 $c=Get-Content -Raw "$env:APPDATA\xdg.config\.wrangler\config\default.toml"
 $cfToken=[regex]::Match($c,'(?m)^oauth_token\s*=\s*"([^"\r\n]+)"').Groups[1].Value
@@ -69,7 +71,7 @@ $cfBase='https://api.cloudflare.com/client/v4/accounts/45f3999f61cb69fb6932f8105
 $before=JsonRequest $cf GET "$cfBase/settings"
 $versions=JsonRequest $cf GET "$cfBase/versions"
 $prior=$versions.result.items[0].id
-$manifest=@{desktop=@{version=$version;windows10=@{url="https://tek-stock-maintenance.teopoh72.workers.dev/releases/$name";sha256=$hash;size=$size}}}
+$manifest=@{desktop=@{version=$version;windows10=@{url=$origin;sha256=$hash;size=$size}}}
 $changed=@{RELEASE_ASSET_URL=$origin;RELEASE_MANIFEST=($manifest|ConvertTo-Json -Depth 8 -Compress)}
 $rollback=@{bindings=@($before.result.bindings|ForEach-Object {if($_.name -in @('RELEASE_ASSET_URL','RELEASE_MANIFEST')){$_}else{@{name=$_.name;type='inherit';version_id='latest'}}})}
 $rollback|ConvertTo-Json -Depth 12|Set-Content -Encoding utf8 (Join-Path $root "outputs\release-$version-rollback.json")
@@ -85,8 +87,12 @@ $r=$cf.SendAsync($req).GetAwaiter().GetResult()
 $j=$r.Content.ReadAsStringAsync().GetAwaiter().GetResult()|ConvertFrom-Json
 if(!$r.IsSuccessStatusCode -or !$j.success){Write-Output ($j.errors|ConvertTo-Json -Depth 4);throw "MANIFEST_PROMOTION_HTTP_$([int]$r.StatusCode)"}
 foreach($url in @('https://tek-stock-maintenance.teopoh72.workers.dev/releases/latest.json','https://tek-stock-inventory-sg.teopoh72.workers.dev/releases/latest.json')){
- $live=JsonRequest $public GET $url
- if($live.desktop.version -ne $version -or $live.desktop.windows10.sha256 -ne $hash){throw "LIVE_MANIFEST_NOT_UPDATED"}
+ $matched=$false
+ for($attempt=0;$attempt -lt 4;$attempt++){
+  $live=JsonRequest $public GET $url
+  if($live.desktop.version -eq $version -and $live.desktop.windows10.sha256 -eq $hash -and $live.desktop.windows10.url -eq $origin){$matched=$true;break}
+ }
+ if(!$matched){throw "LIVE_MANIFEST_NOT_UPDATED"}
  Write-Output "LIVE_MANIFEST_VERIFIED $url $version"
 }
 $receipt=@{version=$version;size=$size;sha256=$hash;sourceCommit=$commit;releaseUrl=$release.html_url;downloadUrl=$manifest.desktop.windows10.url;verifiedAt=[DateTime]::UtcNow.ToString('o')}

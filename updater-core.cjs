@@ -123,6 +123,23 @@ function requestHttps(url, options = {}, redirectsLeft = 3) {
         redirect: "manual",
       });
       request.setHeader?.("User-Agent", options.userAgent || "TEK-STOCK-Updater");
+      let remainingRedirects = redirectsLeft;
+      request.on("redirect", (status, method, redirectUrl) => {
+        try {
+          if (![301, 302, 303, 307, 308].includes(Number(status)) || method !== "GET") {
+            throw updaterError("UPDATE_REDIRECT_INVALID");
+          }
+          if (remainingRedirects <= 0) throw updaterError("UPDATE_TOO_MANY_REDIRECTS");
+          requireHttpsUrl(new URL(redirectUrl, parsed).toString(), "UPDATE_REDIRECT_INVALID");
+          remainingRedirects -= 1;
+          armWatchdog();
+          // Electron requires this call during the redirect event itself.
+          request.followRedirect();
+        } catch (error) {
+          fail(error);
+          try { request.abort(); } catch {}
+        }
+      });
       request.on("response", (incoming) => {
         response = incoming;
         const status = Number(response.statusCode) || 0;

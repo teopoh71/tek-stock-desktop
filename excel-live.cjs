@@ -89,12 +89,6 @@ function Show-TekInventory($application, $book) {
 const FIND_ALREADY_OPEN_WORKBOOK = String.raw`
 function Find-TekAlreadyOpenWorkbook([string]$target) {
   $targetPath = [IO.Path]::GetFullPath($target)
-  try {
-    $boundBook = [Runtime.InteropServices.Marshal]::BindToMoniker($targetPath)
-    if ($null -ne $boundBook -and [IO.Path]::GetFullPath([string]$boundBook.FullName) -ieq $targetPath) {
-      return [pscustomobject]@{ Application = $boundBook.Application; Workbook = $boundBook }
-    }
-  } catch {}
   $applications = @()
   foreach ($progId in @('Excel.Application', 'Ket.Application')) {
     try {
@@ -192,6 +186,84 @@ function findWpsSpreadsheetExecutable(options = {}) {
   }
 }
 
+
+const openedWpsWindows = new Map();
+
+function wpsWindowCacheFile(target, options = {}) {
+  const root = options.windowCacheRoot || path.join(os.tmpdir(), "tek-stock-office-windows");
+  return path.join(root, createHash("sha256").update(target.toLowerCase()).digest("hex") + ".json");
+}
+function loadWpsWindow(target, options = {}) {
+  const memory = openedWpsWindows.get(target.toLowerCase());
+  if (memory) return memory;
+  try {
+    const saved = JSON.parse(fs.readFileSync(wpsWindowCacheFile(target, options), "utf8"));
+    return saved.target === target.toLowerCase() ? saved : {};
+  } catch { return {}; }
+}
+function rememberWpsWindow(target, result, options = {}) {
+  const saved = { target: target.toLowerCase(), handle: result.windowHandle, pid: result.processId, started: result.processStartedTicks };
+  openedWpsWindows.set(target.toLowerCase(), saved);
+  if (!(saved.pid > 0) || !/^\d+$/.test(String(saved.started || ""))) return;
+  try {
+    const file = wpsWindowCacheFile(target, options);
+    fs.mkdirSync(path.dirname(file), { recursive: true, mode: 0o700 });
+    const temporary = file + "." + process.pid + ".tmp";
+    fs.writeFileSync(temporary, JSON.stringify(saved), { mode: 0o600 });
+    fs.renameSync(temporary, file);
+  } catch {}
+}
+
+function focusVisibleWpsWorkbook(file, options = {}) {
+  const target = path.resolve(file);
+  if (!findWpsSpreadsheetExecutable(options)) return null;
+  const known = loadWpsWindow(target, options);
+  const script = String.raw`
+$ErrorActionPreference='Stop'
+$target=[IO.Path]::GetFullPath($env:TEK_STOCK_WORKBOOK)
+$expected=[IO.Path]::GetFileName($target)
+$lock=Join-Path ([IO.Path]::GetDirectoryName($target)) ('~$'+$expected)
+$matches=@()
+if(Test-Path -LiteralPath $lock){
+  foreach($candidate in @(Get-Process -Name wps,et -ErrorAction SilentlyContinue)){
+    if($candidate.MainWindowHandle -eq 0 -or [string]$candidate.MainWindowTitle -notlike ($expected+'*')){continue}
+    $known=([string][int64]$candidate.MainWindowHandle -eq $env:TEK_STOCK_WINDOW_HANDLE -and [string]$candidate.Id -eq $env:TEK_STOCK_WINDOW_PID -and [string]$candidate.StartTime.ToUniversalTime().Ticks -eq $env:TEK_STOCK_WINDOW_STARTED)
+    if(-not $known){
+      $processInfo=Get-CimInstance Win32_Process -Filter ('ProcessId='+$candidate.Id) -ErrorAction SilentlyContinue
+      $known=([string]$processInfo.CommandLine).IndexOf(('"'+$target+'"'),[StringComparison]::OrdinalIgnoreCase) -ge 0
+    }
+    if($known){$matches+= $candidate}
+  }
+}
+if($matches.Count -gt 1){throw 'WORKBOOK_MULTIPLE_WINDOWS'}
+if($matches.Count -eq 0){
+  [Console]::Out.Write('{"ok":true,"alreadyOpen":false}')
+  exit
+}
+Add-Type -TypeDefinition @'
+using System;
+using System.Runtime.InteropServices;
+public static class TekWorkbookWindow {
+ [DllImport("user32.dll")] public static extern bool ShowWindowAsync(IntPtr hWnd, int nCmdShow);
+ [DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr hWnd);
+ [DllImport("user32.dll")] public static extern bool IsWindowVisible(IntPtr hWnd);
+}
+'@
+$window=$matches[0]
+[void][TekWorkbookWindow]::ShowWindowAsync($window.MainWindowHandle,9)
+[void][TekWorkbookWindow]::SetForegroundWindow($window.MainWindowHandle)
+if(-not [TekWorkbookWindow]::IsWindowVisible($window.MainWindowHandle)){throw 'WORKBOOK_WINDOW_NOT_VISIBLE'}
+[Console]::Out.Write(([pscustomobject]@{ok=$true;alreadyOpen=$true;windowHandle=[int64]$window.MainWindowHandle;processId=[int]$window.Id;processStartedTicks=[string]$window.StartTime.ToUniversalTime().Ticks;locked=$true}|ConvertTo-Json -Compress))
+`;
+  const result = runPowerShell(script, {
+    TEK_STOCK_WORKBOOK: target,
+    TEK_STOCK_WINDOW_HANDLE: String(known.handle || ""),
+    TEK_STOCK_WINDOW_PID: String(known.pid || ""),
+    TEK_STOCK_WINDOW_STARTED: String(known.started || ""),
+  }, options);
+  return { ...result, path: target };
+}
+
 function openWorkbookWithPersistentWps(file, options = {}) {
   const target = path.resolve(file);
   const et = findWpsSpreadsheetExecutable(options);
@@ -218,7 +290,7 @@ while([DateTime]::UtcNow -lt $deadline){
 }
 if(-not (Test-Path -LiteralPath $lock)){throw 'WPS_WORKBOOK_LOCK_NOT_FOUND'}
 if($null -eq $window){throw 'WPS_WORKBOOK_WINDOW_NOT_FOUND'}
-[Console]::Out.Write(([pscustomobject]@{ok=$true;opened=$true;path=$target;title=[string]$window.MainWindowTitle;windowHandle=[int64]$window.MainWindowHandle;locked=$true}|ConvertTo-Json -Compress))
+[Console]::Out.Write(([pscustomobject]@{ok=$true;opened=$true;path=$target;title=[string]$window.MainWindowTitle;windowHandle=[int64]$window.MainWindowHandle;processId=[int]$window.Id;processStartedTicks=[string]$window.StartTime.ToUniversalTime().Ticks;locked=$true}|ConvertTo-Json -Compress))
 `;
   const launcherEncoded = Buffer.from(launcher, "utf16le").toString("base64");
   const output = execute("powershell.exe", [
@@ -242,9 +314,10 @@ if($null -eq $window){throw 'WPS_WORKBOOK_WINDOW_NOT_FOUND'}
     if (!match) throw new Error("WPS_OPEN_CONFIRMATION_FAILED");
     parsed = JSON.parse(match[0]);
   }
-  if (parsed.ok !== true || parsed.opened !== true) {
+  if (parsed.ok !== true || parsed.opened !== true || parsed.locked !== true || !(Number(parsed.windowHandle) > 0)) {
     throw new Error(parsed.error || "WPS_OPEN_CONFIRMATION_FAILED");
   }
+  rememberWpsWindow(target, parsed, options);
   return { ...parsed, path: target, persistent: true };
 }
 
@@ -262,11 +335,23 @@ function saveOpenWorkbook(file, options = {}) {
 
 function focusOpenWorkbook(file, options = {}) {
   const target = path.resolve(file);
+  // A closed workbook must never be opened by the already-open probe.
+  const platform = options.platform || process.platform;
+  if (platform === "win32" && !isWorkbookLocked(target, options.fsApi || fs)) {
+    return { ok: true, alreadyOpen: false, path: target };
+  }
+  if (platform === "win32") {
+    const visible = focusVisibleWpsWorkbook(target, options);
+    if (visible?.alreadyOpen) return visible;
+  }
   const script = [
     "$ErrorActionPreference='Stop'",
     FIND_ALREADY_OPEN_WORKBOOK,
     FIND_WORKSHEET_BY_NAME,
     SHOW_TEK_INVENTORY,
+    "$expected=[IO.Path]::GetFileName($env:TEK_STOCK_WORKBOOK)",
+    "$visible=@(Get-Process -Name EXCEL,et,wps -ErrorAction SilentlyContinue|Where-Object{$_.MainWindowHandle -ne 0 -and [string]$_.MainWindowTitle -like ($expected+\"*\")})",
+    "if($visible.Count -eq 0){[Console]::Out.Write(([pscustomobject]@{ok=$true;alreadyOpen=$false;path=$env:TEK_STOCK_WORKBOOK}|ConvertTo-Json -Compress));exit}",
     "try{$result=Find-TekAlreadyOpenWorkbook $env:TEK_STOCK_WORKBOOK}catch{[Console]::Out.Write(([pscustomobject]@{ok=$true;alreadyOpen=$false;path=$env:TEK_STOCK_WORKBOOK}|ConvertTo-Json -Compress));exit}",
     "Show-TekInventory $result.Application $result.Workbook",
     "[Console]::Out.Write(([pscustomobject]@{ok=$true;alreadyOpen=$true;path=[string]$result.Workbook.FullName}|ConvertTo-Json -Compress))",

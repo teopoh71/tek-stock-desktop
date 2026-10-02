@@ -28,7 +28,7 @@ test("WPS opens through its registered launcher and verifies a real workbook win
     },
     execFileSync(command, args, options) {
       observed = { command, args, options };
-      return JSON.stringify({ ok: true, opened: true, path: options.env.TEK_STOCK_WORKBOOK });
+      return JSON.stringify({ ok: true, opened: true, locked: true, windowHandle: 1, path: options.env.TEK_STOCK_WORKBOOK });
     },
   });
   assert.equal(result.persistent, true);
@@ -86,6 +86,7 @@ test("opens and verifies the canonical workbook through Office automation", () =
 
 test("office automation ignores True prefixes leaked by COM assignments", () => {
   const result = openWorkbookInOffice("C:\\Users\\Edwin\\TEK STOCK\\TEK-STOCK-LIVE.xlsx", {
+    platform: "linux",
     execFileSync() {
       return 'True {"ok":true,"opened":true}';
     },
@@ -97,6 +98,7 @@ test("office automation ignores True prefixes leaked by COM assignments", () => 
 test("focuses an already-open WPS workbook instead of opening a second copy", () => {
   let observed;
   const result = focusOpenWorkbook("C:\\Users\\Edwin\\TEK-STOCK-LIVE.xlsx", {
+    platform: "linux",
     execFileSync(command, args, options) {
       observed = { command, script: args.at(-1), options };
       return JSON.stringify({ ok: true, alreadyOpen: true, path: options.env.TEK_STOCK_WORKBOOK });
@@ -109,7 +111,8 @@ test("focuses an already-open WPS workbook instead of opening a second copy", ()
   });
   assert.equal(observed.command, "powershell.exe");
   assert.match(observed.script, /Ket\.Application/);
-  assert.match(observed.script, /BindToMoniker/);
+  assert.doesNotMatch(observed.script, /BindToMoniker/);
+  assert.match(observed.script, /MainWindowHandle/);
   assert.match(observed.script, /Activate\(\)/);
   assert.match(observed.script, /库存总表/);
   assert.match(observed.script, /Show-TekInventory|Goto|A5/);
@@ -292,4 +295,55 @@ test("live mutation validates the open workbook without rereading its locked fil
   assert.match(captured.script, /\[void\]\(\$baseline\.Cells\.ClearContents\(\)\)/);
   assert.equal(captured.script.includes("permanent-id"), false);
   assert.equal(fs.existsSync(captured.payloadPath), false);
+});
+
+test("closed workbook probe does not start Office automation", () => {
+  let calls = 0;
+  const result = focusOpenWorkbook("C:\\TEK STOCK\\TEK-STOCK-LIVE.xlsx", {
+    platform: "win32", fsApi: { existsSync: () => false },
+    execFileSync() { calls++; throw new Error("must not run"); },
+  });
+  assert.equal(result.alreadyOpen, false);
+  assert.equal(calls, 0);
+});
+
+test("WPS process startup alone is not proof of an open workbook", () => {
+  assert.throws(() => openWorkbookWithPersistentWps("C:\\TEK STOCK\\TEK-STOCK-LIVE.xlsx", {
+    localAppData: "C:\\Wps",
+    fsApi: {readdirSync:()=>[{name:"office",isDirectory:()=>true}],existsSync:()=>true},
+    execFileSync:()=>JSON.stringify({ok:true,opened:true}),
+  }), /WPS_OPEN_CONFIRMATION_FAILED/);
+});
+
+test("an existing visible WPS window can be focused without COM registration", () => {
+  let calls=0, script;
+  const result=focusOpenWorkbook("C:\\TEK STOCK\\TEK-STOCK-LIVE.xlsx", {
+    platform:"win32", localAppData:"C:\\Wps",
+    fsApi:{existsSync:()=>true,readdirSync:()=>[{name:"office",isDirectory:()=>true}]},
+    execFileSync(_command,args){calls++;script=args.at(-1);return JSON.stringify({ok:true,alreadyOpen:true,windowHandle:12,locked:true});},
+  });
+  assert.equal(result.alreadyOpen,true);
+  assert.equal(calls,1);
+  assert.match(script,/SetForegroundWindow/);
+  assert.match(script,/TEK_STOCK_WINDOW_HANDLE/);
+  assert.match(script,/CommandLine/);
+  assert.doesNotMatch(script,/BindToMoniker|Workbooks.Open|New-Object -ComObject/);
+});
+
+test("WPS window identity survives application restart and includes process start time", () => {
+  const directory=fs.mkdtempSync(path.join(os.tmpdir(),"tek-window-cache-test-"));
+  const target=path.join(directory,"TEK-STOCK-LIVE.xlsx");
+  const discovery={existsSync:()=>true,readdirSync:()=>[{name:"office",isDirectory:()=>true}]};
+  try {
+    openWorkbookWithPersistentWps(target,{windowCacheRoot:directory,fsApi:discovery,localAppData:"C:\\Wps",
+      execFileSync:()=>JSON.stringify({ok:true,opened:true,locked:true,windowHandle:42,processId:1234,processStartedTicks:"638000000000000001"})});
+    delete require.cache[require.resolve("../excel-live.cjs")];
+    const fresh=require("../excel-live.cjs");
+    let env;
+    fresh.focusOpenWorkbook(target,{platform:"win32",windowCacheRoot:directory,fsApi:discovery,localAppData:"C:\\Wps",
+      execFileSync(_cmd,_args,options){env=options.env;return JSON.stringify({ok:true,alreadyOpen:true});}});
+    assert.equal(env.TEK_STOCK_WINDOW_HANDLE,"42");
+    assert.equal(env.TEK_STOCK_WINDOW_PID,"1234");
+    assert.equal(env.TEK_STOCK_WINDOW_STARTED,"638000000000000001");
+  } finally {fs.rmSync(directory,{recursive:true,force:true});}
 });

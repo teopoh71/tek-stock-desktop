@@ -7,27 +7,53 @@ const MAX_EVENTS = 500, MAX_AGE = 7 * 86400000;
 function createDiagnosticsOutbox(options) {
   const file = path.join(options.directory, "diagnostics-outbox.json");
   const now = options.now || Date.now;
-  let entries = [], active = false, nextAt = 0, attempts = 0;
+  let entries = [], unresolved = {}, nextSequence = 1, active = false, nextAt = 0, attempts = 0;
   fs.mkdirSync(options.directory, { recursive: true, mode: 0o700 });
   if (fs.existsSync(file) && fs.lstatSync(file).isSymbolicLink()) throw new Error("UNSAFE_DIAGNOSTICS_PATH");
   try {
     const parsed = JSON.parse(fs.readFileSync(file, "utf8"));
-    entries = Array.isArray(parsed) ? parsed.filter(e => /^[a-f0-9-]{36}$/.test(e?.id))
-      .slice(-MAX_EVENTS).map(e => ({ id: e.id, ...safeEvent(e) })) : [];
+    const legacyEntries = Array.isArray(parsed) ? parsed : parsed?.entries;
+    entries = Array.isArray(legacyEntries) ? legacyEntries.filter(e => /^[a-f0-9-]{36}$/.test(e?.id))
+      .slice(-MAX_EVENTS).map((e, index) => ({ id: e.id, ...safeEvent(e), eventSequence: Math.max(1, Number(e.eventSequence) || index + 1) })) : [];
+    const persistedUnresolved = parsed && !Array.isArray(parsed) ? parsed.unresolved || parsed.recovered : undefined;
+    unresolved = persistedUnresolved && typeof persistedUnresolved === "object"
+      ? Object.fromEntries(Object.entries(persistedUnresolved).filter(([key, value]) => /^[a-z0-9._:-]{1,240}$/i.test(key) && value === true)) : {};
+    nextSequence = Math.max(...entries.map(event => event.eventSequence), Number(parsed?.nextSequence) || 0) + 1;
   } catch (error) { if (error.code !== "ENOENT") options.onError?.("DIAGNOSTICS_QUEUE_READ_FAILED"); }
   function persist(next) {
     const temp = file + "." + randomUUID() + ".tmp";
-    fs.writeFileSync(temp, JSON.stringify(next), { encoding: "utf8", mode: 0o600, flag: "wx" });
+    fs.writeFileSync(temp, JSON.stringify({ version: 3, entries: next, unresolved, nextSequence }), { encoding: "utf8", mode: 0o600, flag: "wx" });
     fs.renameSync(temp, file); entries = next;
   }
+  function family(stage, errorCode) {
+    const value = String(stage || "unknown");
+    if (/^refresh_|^cloud_download$/.test(value)) return "cloud_download";
+    if (/^sync_|^excel_sync|^excel_import$|^excel_ack$/.test(value)) return "excel_sync";
+    if (value === "app.error") return /^(CLOUD|API|HTTP_|SYNC_TOKEN|UNAUTHORIZED|AUTH_)/.test(String(errorCode || "")) ? "cloud_download"
+      : /^(EXCEL|WORKBOOK)/.test(String(errorCode || "")) ? "excel_sync" : "app.error";
+    return value;
+  }
+  function recoveryKey(event) { return `${event.deviceId || "local"}:${event.authorityId || "unknown"}:${family(event.stage, event.errorCode)}`; }
+  function saved(event, extra = {}) { return { id: randomUUID(), ...event, eventSequence: nextSequence++, ...extra }; }
   function enqueue(input) {
     const event = safeEvent(input);
-    if (event.ok) return { ok: true, queued: false };
+    if (event.ok) {
+      if (/_started$/.test(event.stage)) return { ok: true, queued: false };
+      const key = recoveryKey(event);
+      if (!unresolved[key]) return { ok: true, queued: false };
+      delete unresolved[key];
+      const entry = saved(event, { recovered: true });
+      persist([...entries, entry].slice(-MAX_EVENTS));
+      return { ok: true, queued: true, id: entry.id };
+    }
     const retained = entries.filter(e => now() - Date.parse(e.timestamp) < MAX_AGE);
-    const duplicate = retained.find(e => e.errorCode === event.errorCode && e.stage === event.stage
-      && e.appVersion === event.appVersion && Math.abs(Date.parse(e.timestamp) - Date.parse(event.timestamp)) < 60000);
+    const key = recoveryKey(event);
+    const duplicate = unresolved[key] && retained.find(e => e.errorCode === event.errorCode && e.stage === event.stage
+      && e.appVersion === event.appVersion && e.deviceId === event.deviceId && e.authorityId === event.authorityId
+      && Math.abs(Date.parse(e.timestamp) - Date.parse(event.timestamp)) < 60000);
     if (duplicate) return { ok: true, queued: true, id: duplicate.id };
-    const entry = { id: randomUUID(), ...event };
+    unresolved[key] = true;
+    const entry = saved(event);
     persist([...retained, entry].slice(-MAX_EVENTS));
     return { ok: true, queued: true, id: entry.id };
   }

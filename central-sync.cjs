@@ -226,6 +226,40 @@ function workbookMatchesSnapshot(currentRows, confirmedItems) {
   return true;
 }
 
+function acknowledgedWorkbookAdditions({ history, baselineRevision, baselineRecords, liveItems }) {
+  const revision = Number(baselineRevision);
+  if (!Number.isSafeInteger(revision) || revision < 0 || !Array.isArray(baselineRecords)) return [];
+  const liveById = new Map((liveItems || []).map((item) => [String(item?.id || ""), item]));
+  const candidatesById = new Map();
+  for (const event of Array.isArray(history) ? history : []) {
+    if (event?.type !== "workbook" || event?.lifecycle !== "acked") continue;
+    const commitRevision = Number(event?.result?.commitRevision);
+    const mutation = event?.mutation;
+    const baseItems = mutation?.baseItems;
+    if (!Number.isSafeInteger(commitRevision) || commitRevision <= revision
+        || Number(mutation?.baseRevision) !== revision
+        || !Array.isArray(baseItems)
+        || !workbookMatchesSnapshot(baseItems, baselineRecords)) continue;
+    const baseIds = new Set(baseItems.map((item) => String(item?.id || "")));
+    for (const operation of Array.isArray(mutation?.operations) ? mutation.operations : []) {
+      if (operation?.type !== "upsert") continue;
+      const id = String(operation?.item?.id || "").trim();
+      if (!SAFE_PERMANENT_ID.test(id) || baseIds.has(id) || !liveById.has(id)) continue;
+      let item;
+      try {
+        item = cleanItem(operation.item);
+      } catch {
+        continue;
+      }
+      if (!candidatesById.has(id)) candidatesById.set(id, []);
+      candidatesById.get(id).push(item);
+    }
+  }
+  return [...candidatesById.values()]
+    .filter((candidates) => candidates.length === 1)
+    .map(([item]) => item);
+}
+
 function parseDataUrl(value) {
   const match = String(value || "").match(/^data:(image\/(?:webp|png|jpeg));base64,([a-z0-9+/=]+)$/i);
   if (!match) throw syncError("PHOTO_DATA_INVALID");
@@ -965,17 +999,25 @@ function createCentralSync(options = {}) {
         })),
       });
     }
-    const baselineRecords = workbook.baseline?.records || [];
+    const persistedBaselineRecords = workbook.baseline?.records || [];
     const baselineCorrupt = workbook.baseline?.corrupt === true;
     const hasCompleteBaseline = !baselineCorrupt
       && workbook.baseline?.revision != null
       && workbook.baseline?.itemCount != null
       && workbook.sync?.revision != null
       && workbook.sync?.itemCount != null
-      && baselineRecords.length === Number(workbook.baseline?.itemCount)
+      && persistedBaselineRecords.length === Number(workbook.baseline?.itemCount)
       && Number(workbook.baseline?.revision) === Number(workbook.sync?.revision)
       && Number(workbook.baseline?.itemCount) === Number(workbook.sync?.itemCount);
-    const acknowledgedItemCount = workbook.sync?.itemCount ?? workbook.baseline?.itemCount;
+    const acknowledgedAdditions = baselineCorrupt ? [] : acknowledgedWorkbookAdditions({
+      history: outbox.history(),
+      baselineRevision: workbook.baseline?.revision,
+      baselineRecords: persistedBaselineRecords,
+      liveItems: initialConfirmed.items,
+    });
+    const baselineRecords = [...persistedBaselineRecords, ...acknowledgedAdditions];
+    const acknowledgedItemCount = baselineRecords.length
+      || (workbook.sync?.itemCount ?? workbook.baseline?.itemCount);
     const planned = planBlankIdRows(identityRows, initialConfirmed.items, {
       dataStartRow: 5,
       acknowledgedItemCount,

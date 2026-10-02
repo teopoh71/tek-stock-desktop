@@ -1,4 +1,5 @@
 "use strict";
+const { validateSyncToken } = require("./sync-token-validation.cjs");
 
 function apiError(code, details = {}) {
   const error = new Error(code);
@@ -91,9 +92,8 @@ function createApiRequester(options = {}) {
     const { authorityId, endpoints } = resolveEndpoints();
     const headers = { accept: "application/json", ...(fetchInit.headers || {}) };
     if (authorityId) headers["x-tek-stock-authority-id"] = authorityId;
-    if (write === true) {
-      const token = String(getToken() || "").trim();
-      if (!token) throw apiError("SYNC_TOKEN_MISSING");
+    if (write === true || authorityId === "tek-stock-independent-v1") {
+      const token = validateSyncToken(getToken());
       headers.authorization = `Bearer ${token}`;
     }
     const idempotencyKey = Object.entries(headers).find(([key]) =>

@@ -72,6 +72,7 @@ async function minimalArchive(directory, options = {}) {
     "private-workbook-bootstrap.cjs", "private-workbook-bootstrap-main.cjs",
     "workbook-identity-migration.cjs", "workbook-migration-transaction.cjs",
     "packaged-smoke-runtime.cjs", "inventory/conflict-resolution.js",
+    "node_modules/detect-libc/lib/detect-libc.js",
   ]) {
     const target = path.join(appDirectory, file);
     fs.mkdirSync(path.dirname(target), { recursive: true });

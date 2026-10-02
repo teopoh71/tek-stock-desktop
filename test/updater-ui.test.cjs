@@ -31,7 +31,7 @@ test("Update syncs data then applies only a newer verified app release", () => {
   assert.match(css, /background: var\(--danger\)/);
   assert.match(html, /id="updateReceipt"/);
   assert.match(preload, /receipt: \(\) => ipcRenderer\.invoke\("tek-stock-updater-receipt"\)/);
-  assert.match(app, /async function handleUpdateClick\(\)[\s\S]*?await updateInventory\(\)[\s\S]*?applyNewerDesktopUpdate\(\)/);
+  assert.match(app, /async function handleUpdateClick\(\)[\s\S]*?await updateInventory\(\)[\s\S]*?applyNewerDesktopUpdate\(false,/);
   assert.match(app, /await window\.TekStockUpdater\.update\(\)/);
   assert.match(app, /renderUpdateReceipt\(status\?\.receipt, announce\)/);
 });

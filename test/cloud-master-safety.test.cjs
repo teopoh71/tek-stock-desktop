@@ -26,6 +26,7 @@ function updateInventoryHarness(overrides = {}) {
     remoteConfig: { readOnly: false },
     cloudDataState: "live",
     cloudLastErrorCode: "",
+    isUploadTokenRejection: (error) => /SYNC_TOKEN_MISSING|UNAUTHORIZED/.test(String(error?.code || "")),
     loadRemoteData: async (showToast) => {
       calls.push(`cloud:${showToast}`);
       return true;
@@ -112,6 +113,8 @@ test("automatic polling runs central workbook pull with no local pending edits",
   const calls = [];
   const factory = Function("calls", `
     let automaticSyncActive = false;
+    let cloudDataState = "live";
+    let excelInitialized = true;
     let lastRemoteRevision = 10;
     let excelUploadPending = true;
     const hasPendingEdits = () => false;
@@ -119,6 +122,7 @@ test("automatic polling runs central workbook pull with no local pending edits",
     const loadRemoteData = async () => true;
     const window = { TekStockExcel: {}, TekStockCloud: { syncWorkbook: true } };
     const syncWorkbookWithTokenRetry = async () => { calls.push("central-sync"); return { retryRequired: true }; };
+    const initializeExcel = async () => calls.push("initialize-excel");
     const syncExcelFromApp = async () => { calls.push("legacy-write"); };
     const updateCloudVersionBadge = () => calls.push("badge");
     const toast = (message) => calls.push(message);

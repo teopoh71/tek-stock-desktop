@@ -46,7 +46,8 @@ export default {
     if (url.pathname === "/v1/diagnostics" && request.method === "POST") {
       // The existing legacy sync credential is allowed to write sanitized reports only.
       // Incident reads still require the separate strong monitor credential.
-      if (!authorized(request, env.INGEST_TOKEN) && !authorized(request, env.SYNC_INGEST_TOKEN, 7)) return json({ error: "UNAUTHORIZED" }, 401);
+      if (!authorized(request, env.INGEST_TOKEN) && !authorized(request, env.INVENTORY_INGEST_TOKEN)
+          && !authorized(request, env.SYNC_INGEST_TOKEN, 7)) return json({ error: "UNAUTHORIZED" }, 401);
       try {
         const body = await bodyWithinLimit(request);
         if (!Array.isArray(body.events) || !body.events.length || body.events.length > 20) return json({ error: "INVALID_BATCH" }, 400);
@@ -58,8 +59,10 @@ export default {
         });
         const receivedAt = new Date().toISOString();
         await env.DB.batch(events.map(event => env.DB.prepare(
-          "INSERT OR IGNORE INTO diagnostic_events (id, occurred_at, received_at, app_version, stage, error_code) VALUES (?, ?, ?, ?, ?, ?)"
-        ).bind(event.id, event.timestamp, receivedAt, event.appVersion, event.stage, event.errorCode)));
+          "INSERT OR IGNORE INTO diagnostic_events (id, occurred_at, received_at, app_version, stage, error_code, device_id, authority_id, ok, recovered, revision, pending_count, event_sequence) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+        ).bind(event.id, event.timestamp, receivedAt, event.appVersion, event.stage, event.errorCode,
+          event.deviceId || "legacy", event.authorityId || "unknown", event.ok ? 1 : 0, event.recovered ? 1 : 0,
+          event.revision ?? null, event.pending ?? null, event.eventSequence ?? 0)));
         return json({ accepted: events.map(e => e.id) }, 202);
       } catch { return json({ error: "REPORT_NOT_ACCEPTED" }, 400); }
     }
@@ -68,9 +71,39 @@ export default {
       const requested = Date.parse(url.searchParams.get("since") || "");
       const since = new Date(Math.max(Date.now() - 7 * 86400000, Number.isFinite(requested) ? requested : Date.now() - 86400000)).toISOString();
       const result = await env.DB.prepare(
-        "SELECT app_version, stage, error_code, COUNT(*) AS occurrences, MIN(received_at) AS first_seen, MAX(received_at) AS last_seen FROM diagnostic_events WHERE received_at > ? GROUP BY app_version, stage, error_code ORDER BY last_seen DESC LIMIT 100"
+        `WITH scoped AS (
+          SELECT device_id, authority_id, app_version, stage,
+            CASE WHEN stage LIKE 'refresh_%' OR stage = 'cloud_download'
+                OR (stage = 'app.error' AND (error_code LIKE 'CLOUD%' OR error_code LIKE 'API%' OR error_code LIKE 'HTTP_%' OR error_code LIKE 'AUTH_%' OR error_code IN ('SYNC_TOKEN_MISSING', 'UNAUTHORIZED')))
+                THEN 'cloud_download'
+              WHEN stage LIKE 'sync_%' OR stage IN ('excel_sync', 'excel_sync_ipc', 'excel_import', 'excel_ack')
+                OR (stage = 'app.error' AND (error_code LIKE 'EXCEL%' OR error_code LIKE 'WORKBOOK%'))
+                THEN 'excel_sync' ELSE stage END AS incident_stage,
+            error_code, ok, recovered, revision, pending_count, event_sequence, occurred_at, received_at, id,
+            ROW_NUMBER() OVER (PARTITION BY device_id, authority_id, CASE WHEN stage LIKE 'refresh_%' OR stage = 'cloud_download' OR (stage = 'app.error' AND (error_code LIKE 'CLOUD%' OR error_code LIKE 'API%' OR error_code LIKE 'HTTP_%' OR error_code LIKE 'AUTH_%' OR error_code IN ('SYNC_TOKEN_MISSING', 'UNAUTHORIZED'))) THEN 'cloud_download' WHEN stage LIKE 'sync_%' OR stage IN ('excel_sync', 'excel_sync_ipc', 'excel_import', 'excel_ack') OR (stage = 'app.error' AND (error_code LIKE 'EXCEL%' OR error_code LIKE 'WORKBOOK%')) THEN 'excel_sync' ELSE stage END ORDER BY occurred_at DESC, event_sequence DESC, received_at DESC) AS latest_rank,
+            COUNT(*) OVER (PARTITION BY device_id, authority_id, CASE WHEN stage LIKE 'refresh_%' OR stage = 'cloud_download' OR (stage = 'app.error' AND (error_code LIKE 'CLOUD%' OR error_code LIKE 'API%' OR error_code LIKE 'HTTP_%' OR error_code LIKE 'AUTH_%' OR error_code IN ('SYNC_TOKEN_MISSING', 'UNAUTHORIZED'))) THEN 'cloud_download' WHEN stage LIKE 'sync_%' OR stage IN ('excel_sync', 'excel_sync_ipc', 'excel_import', 'excel_ack') OR (stage = 'app.error' AND (error_code LIKE 'EXCEL%' OR error_code LIKE 'WORKBOOK%')) THEN 'excel_sync' ELSE stage END) AS occurrences,
+            MIN(received_at) OVER (PARTITION BY device_id, authority_id, CASE WHEN stage LIKE 'refresh_%' OR stage = 'cloud_download' OR (stage = 'app.error' AND (error_code LIKE 'CLOUD%' OR error_code LIKE 'API%' OR error_code LIKE 'HTTP_%' OR error_code LIKE 'AUTH_%' OR error_code IN ('SYNC_TOKEN_MISSING', 'UNAUTHORIZED'))) THEN 'cloud_download' WHEN stage LIKE 'sync_%' OR stage IN ('excel_sync', 'excel_sync_ipc', 'excel_import', 'excel_ack') OR (stage = 'app.error' AND (error_code LIKE 'EXCEL%' OR error_code LIKE 'WORKBOOK%')) THEN 'excel_sync' ELSE stage END) AS first_seen
+          FROM diagnostic_events WHERE received_at > ?
+        )
+        SELECT device_id, authority_id, app_version, incident_stage, stage AS last_event_stage, error_code, ok, recovered, revision, pending_count, occurrences, first_seen, received_at AS last_seen
+        FROM scoped WHERE latest_rank = 1 ORDER BY occurred_at DESC, event_sequence DESC, last_seen DESC LIMIT 100`
       ).bind(since).all();
-      return json({ incidents: result.results, checkedAt: new Date().toISOString() });
+      const incidents = (result.results || []).map(row => ({
+        deviceId: row.device_id === "legacy" ? null : row.device_id,
+        deviceKnown: row.device_id !== "legacy",
+        authorityId: row.authority_id || "unknown",
+        appVersion: row.app_version,
+        stage: row.incident_stage,
+        lastEventStage: row.last_event_stage,
+        errorCode: row.error_code,
+        state: row.recovered || row.ok ? "recovered" : "active",
+        revision: row.revision == null ? null : row.revision,
+        pending: row.pending_count == null ? null : row.pending_count,
+        occurrences: row.occurrences,
+        firstSeen: row.first_seen,
+        lastSeen: row.last_seen,
+      }));
+      return json({ incidents, checkedAt: new Date().toISOString() });
     }
     return json({ error: "NOT_FOUND" }, 404);
   },

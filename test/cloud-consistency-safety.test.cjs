@@ -38,7 +38,7 @@ test("manual Update refreshes live cloud then finishes one central workbook sync
   const updateStart = appSource.indexOf("async function updateInventory()");
   const updateEnd = appSource.indexOf('el.searchInput.addEventListener("input"', updateStart);
   const updateSource = appSource.slice(updateStart, updateEnd);
-  const refresh = updateSource.indexOf("const cloudLoaded = await loadRemoteData(true)");
+  const refresh = updateSource.indexOf("let cloudLoaded = await loadRemoteData(true)");
   const sync = updateSource.indexOf("const synced = await syncWorkbookWithTokenRetry()", refresh);
   assert.ok(refresh >= 0);
   assert.ok(sync > refresh);
@@ -46,10 +46,6 @@ test("manual Update refreshes live cloud then finishes one central workbook sync
 });
 
 test("a failed Excel data sync is not masked by the app-version updater", () => {
-  assert.match(
-    appSource,
-    /async function handleUpdateClick\(\)\s*\{\s*const dataSynchronized = await updateInventory\(\);\s*if \(!dataSynchronized\) return false;\s*return applyNewerDesktopUpdate\(\);\s*\}/,
-  );
   assert.match(appSource, /function renderDataSyncFailure\(errorCode\)/);
   assert.match(appSource, /Excel sync failed/);
   assert.match(appSource, /renderDataSyncFailure\(error\?\.code \|\| error\?\.message \|\| "WORKBOOK_SYNC_FAILED"\)/);

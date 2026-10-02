@@ -1,6 +1,6 @@
 {
   "name": "samlee-inventory-desktop",
-  "version": "1.6.8",
+  "version": "1.6.15",
   "description": "TEK STOCK Singapore furniture inventory desktop application",
   "main": "main.cjs",
   "author": "SAMLEE",
@@ -11,6 +11,7 @@
     "test:workbook-identity": "node scripts/run-workbook-identity-gate.cjs",
     "dist:msi": "npm run test:workbook-identity && node build/verify-packaged-version.cjs && node inventory/verify-photo-lock.js && electron-builder --win msi --x64 && node build/harden-msi-local-install.cjs",
     "dist:update": "npm run test:workbook-identity && node build/verify-packaged-version.cjs && node inventory/verify-photo-lock.js && electron-builder --config build/electron-builder.update.cjs --win nsis --x64 --publish never",
+    "dist:clean": "npm run test:workbook-identity && node build/verify-packaged-version.cjs && node inventory/verify-photo-lock.js && electron-builder --config build/electron-builder.clean.cjs --win nsis --x64 --publish never",
     "dist:remote": "npm run test:workbook-identity && node build/verify-packaged-version.cjs && node inventory/verify-photo-lock.js && electron-builder --config build/electron-builder.remote.cjs --win nsis --x64",
     "dist:win7": "npm run test:workbook-identity && node build/verify-packaged-version.cjs && node inventory/verify-photo-lock.js && electron-builder --config build/electron-builder.win7.cjs --win msi --x64"
   },
@@ -31,6 +32,8 @@
       "preload.cjs",
       "alibaba-config.cjs",
       "api-failover.cjs",
+      "electron-network-fetch.cjs",
+      "sync-token-validation.cjs",
       "central-sync.cjs",
       "sync-trace.cjs",
       "excel-live.cjs",

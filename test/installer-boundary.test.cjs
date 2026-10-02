@@ -54,7 +54,7 @@ function writeValidArchiveFixture(t, extraFiles) {
     apiBaseUrl: "https://stock-api.aliyuncs.com",
     ossPublicBaseUrl: "https://tek-stock-photos.oss-cn-hangzhou.aliyuncs.com",
   }));
-  for (const runtimeFile of REQUIRED_RUNTIME) {
+  for (const runtimeFile of [...REQUIRED_RUNTIME, "node_modules/detect-libc/lib/detect-libc.js"]) {
     const target = path.join(appDirectory, ...runtimeFile.split("/"));
     fs.mkdirSync(path.dirname(target), { recursive: true });
     fs.writeFileSync(target, '"use strict";\n');

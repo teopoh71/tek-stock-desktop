@@ -1,6 +1,7 @@
 "use strict";
 const fs = require("node:fs");
 const path = require("node:path");
+const { validateSyncToken } = require("./sync-token-validation.cjs");
 function httpsEndpoint(value) {
   if (!value) return "";
   const url = new URL(String(value));
@@ -21,13 +22,15 @@ function readMaintenanceConfig(directory, env = process.env) {
 }
 function postDiagnostics(url, token, events, electronNet) {
   const target = httpsEndpoint(url);
-  if (!target || !token) return Promise.reject(new Error("DIAGNOSTICS_NOT_CONFIGURED"));
+  if (!target) return Promise.reject(new Error("DIAGNOSTICS_NOT_CONFIGURED"));
+  let validatedToken;
+  try { validatedToken = validateSyncToken(token); } catch (error) { return Promise.reject(error); }
   return new Promise((resolve, reject) => {
     const request = electronNet.request({ method: "POST", url: target, redirect: "manual" });
     const timer = setTimeout(() => { request.abort(); reject(new Error("DIAGNOSTICS_TIMEOUT")); }, 8000);
     const fail = () => { clearTimeout(timer); reject(new Error("DIAGNOSTICS_SEND_FAILED")); };
     request.setHeader("content-type", "application/json");
-    request.setHeader("authorization", "Bearer " + token);
+    request.setHeader("authorization", "Bearer " + validatedToken);
     request.on("redirect", () => { request.abort(); fail(); });
     request.on("error", fail);
     request.on("response", response => {

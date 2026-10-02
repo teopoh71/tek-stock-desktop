@@ -21,7 +21,15 @@ test("each failure provides concrete non-destructive choices including continue"
 test("diagnostics omit inventory, identities, credentials, text and unknown codes", () => {
   const result = safeEvent({ errorCode: "my password", stage: "customer jane", appVersion: "1.6.8", token: "secret", items: [{ price: 50 }], message: "secret", traceId: "private", revision: 37 });
   assert.equal(result.errorCode, "UNKNOWN_ERROR"); assert.equal(result.stage, "unknown");
-  assert.deepEqual(Object.keys(result), ["timestamp", "appVersion", "stage", "ok", "errorCode"]);
+  assert.deepEqual(Object.keys(result), ["timestamp", "appVersion", "stage", "ok", "errorCode", "revision"]);
+});
+
+test("malformed-key telemetry retains only its actionable code, never credential content", () => {
+  const result = safeEvent({ stage: "refresh_failed", ok: false, errorCode: "SYNC_TOKEN_INVALID",
+    appVersion: "1.6.13", token: "synthetic-invalid-key", message: "private header contents" });
+  assert.equal(result.errorCode, "SYNC_TOKEN_INVALID");
+  assert.equal(JSON.stringify(result).includes("synthetic-invalid-key"), false);
+  assert.equal(JSON.stringify(result).includes("private header"), false);
 });
 test("offline queue survives restart, deduplicates and removes only acknowledged events", async t => {
   const root = directory(t); let connected = false;

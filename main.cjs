@@ -87,9 +87,12 @@ const {
 const { createWorkbookOperationGate } = require("./workbook-operation-gate.cjs");
 
 const { createDiagnosticsOutbox } = require("./diagnostics-outbox.cjs");
+const { safeEvent } = require("./diagnostic-payload.cjs");
 const { readMaintenanceConfig, postDiagnostics } = require("./maintenance-config.cjs");
+const { validateSyncToken } = require("./sync-token-validation.cjs");
 const { assertIdle, createUpdateBackup, updateError } = require("./safe-update.cjs");
 const diagnosticQueues = new Map();
+const DIAGNOSTIC_DEVICE_FILE = "diagnostics-device.json";
 let rendererMaintenanceState = { seenAt: 0, safe: false };
 let maintenanceTimer;
 let activeCloudOperations = 0;
@@ -98,6 +101,27 @@ async function trackCloudOperation(operation) {
   if (installingUpdate) throw updateError("UPDATE_BUSY");
   activeCloudOperations += 1;
   try { return await operation(); } finally { activeCloudOperations -= 1; }
+}
+function createDiagnosticContext(options = {}) {
+  const userDataPath = options.userDataPath || app.getPath("userData");
+  const file = path.join(userDataPath, DIAGNOSTIC_DEVICE_FILE);
+  let deviceId = "";
+  try {
+    if (fs.existsSync(file) && !fs.lstatSync(file).isSymbolicLink()) {
+      deviceId = String(JSON.parse(fs.readFileSync(file, "utf8")).deviceId || "");
+    }
+  } catch {}
+  if (!/^d-[a-f0-9]{32}$/.test(deviceId)) {
+    deviceId = `d-${randomUUID().replaceAll("-", "")}`;
+    fs.mkdirSync(userDataPath, { recursive: true, mode: 0o700 });
+    const temporary = `${file}.${randomUUID()}.tmp`;
+    fs.writeFileSync(temporary, JSON.stringify({ deviceId }), { encoding: "utf8", mode: 0o600, flag: "wx" });
+    fs.renameSync(temporary, file);
+  }
+  const authorityId = /^[a-z0-9][a-z0-9._:-]{0,79}$/i.test(String(options.authorityId || ""))
+    ? String(options.authorityId) : "unknown";
+  const appVersion = /^\d+\.\d+\.\d+$/.test(String(options.appVersion || "")) ? String(options.appVersion) : "unknown";
+  return { deviceId, authorityId, appVersion };
 }
 function diagnosticsFor(directory) {
   if (!diagnosticQueues.has(directory)) {
@@ -444,11 +468,24 @@ function appendDiagnosticEvent(input, options = {}) {
     appVersion: options.appVersion || app.getVersion(),
     now,
   });
-  const line = serializeDiagnosticEvent(entry, maxLineBytes);
+  const context = options.context || createDiagnosticContext({
+    userDataPath,
+    appVersion: options.appVersion || app.getVersion(),
+    authorityId: options.authorityId || readAlibabaCloudConfig({ userDataPath }).authorityId,
+  });
+  const queuedEntry = { ...entry, ...context };
+  const pending = diagnosticNumber(input?.pending);
+  if (pending != null) queuedEntry.pending = pending;
+  const outboundEvent = safeEvent(queuedEntry);
+  const line = serializeDiagnosticEvent(queuedEntry, maxLineBytes);
   const file = path.join(directory, `TEK-STOCK-diagnostics-${localDateStamp(now)}.jsonl`);
   const bytes = appendCappedDiagnosticLine(file, line, maxFileBytes);
   pruneDiagnosticFiles(userDataPath, options.maxFiles);
-  try { diagnosticsFor(userDataPath).enqueue(entry); } catch {}
+  try {
+    const queue = diagnosticsFor(userDataPath);
+    const queued = queue.enqueue(outboundEvent);
+    if (queued.queued && process.env.TEK_STOCK_TEST !== "1") void queue.flush().catch(() => {});
+  } catch {}
   return { ok: true, path: file, bytes };
 }
 
@@ -960,8 +997,12 @@ function readStoredUploadToken() {
 }
 
 function storeUploadToken(token) {
-  const normalized = String(token || "").trim();
-  if (!normalized) return { ok: false, error: "同步密钥不能为空" };
+  let normalized;
+  try { normalized = validateSyncToken(token); }
+  catch (error) {
+    return { ok: false, errorCode: error.code, error: error.code === "SYNC_TOKEN_MISSING"
+      ? "同步密钥不能为空" : "同步密钥格式不正确，请输入授权密钥，不要填写说明文字" };
+  }
   if (!safeStorage.isEncryptionAvailable()) {
     return { ok: false, error: "此电脑无法安全保存同步密钥" };
   }
@@ -996,6 +1037,7 @@ function centralSyncService() {
   const storageDirectory = path.join(app.getPath("userData"), "central-sync");
   centralSync = createCentralSync({
     storageDirectory,
+    fetchImpl: (url, init) => electronNet.fetch(url, init),
     getApiBaseUrl: () => readAlibabaCloudConfig().apiBaseUrl,
     getApiFallbackBaseUrls: () => readAlibabaCloudConfig().apiFallbackBaseUrls,
     getAuthorityId: () => readAlibabaCloudConfig().authorityId,
@@ -2956,6 +2998,7 @@ function registerDiagnosticsIpc(options = {}) {
     maxFiles: options.maxFiles,
     maxLineBytes: options.maxLineBytes,
     maxFileBytes: options.maxFileBytes,
+    authorityId: options.authorityId || (() => { try { return readAlibabaCloudConfig({ userDataPath }).authorityId; } catch { return ""; } })(),
   });
 
   ipc.handle("tek-stock-diagnostics-append", (_event, entry) => {
@@ -3402,6 +3445,7 @@ if (isolatedSmokeLoadError) {
 
 module.exports = {
   appendDiagnosticEvent,
+  createDiagnosticContext,
   acknowledgeWorkbookFile,
   assignWorkbookPermanentIds,
   buildWorkbook,

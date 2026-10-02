@@ -254,6 +254,141 @@ test("workbook bridge failure is not reported as a successful sync", async (t) =
   assert.equal(result.errorCode, "EXCEL_BINDING_FAILED");
 });
 
+test("an acknowledged cloud addition becomes a safe virtual baseline when Excel acknowledgement fails", async (t) => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), "tek-acknowledged-addition-baseline-"));
+  t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
+  const existing = { id: "existing", model: "KEEP", category: "Chair", stock: 1, sourceRow: 5 };
+  const api = fakeAlibabaApi([existing]);
+  const sync = service(directory, api);
+  let assignedId = "";
+  let workbook = {
+    ok: true,
+    sha256: "before-addition",
+    items: [existing, { id: "", model: "3333", category: "Chair", stock: 0, sourceRow: 6 }],
+    sync: { revision: 0, itemCount: 1 },
+    baseline: { revision: 0, itemCount: 1, records: [existing] },
+  };
+  const callbacks = {
+    readWorkbook: async () => structuredClone(workbook),
+    assignIds: async ([assignment]) => {
+      assignedId = assignment.id;
+      workbook.items[1].id = assignedId;
+      workbook.sha256 = "assigned-addition";
+      return { ok: true };
+    },
+    acknowledge: async ({ items, sync: metadata }) => {
+      if (workbook.sha256 === "assigned-addition") {
+        throw Object.assign(new Error("EXCEL_BINDING_FAILED"), { code: "EXCEL_BINDING_FAILED" });
+      }
+      workbook = {
+        ok: true,
+        sha256: "acknowledged-rename",
+        items: structuredClone(items),
+        sync: { revision: metadata.revision, itemCount: items.length },
+        baseline: { revision: metadata.revision, itemCount: items.length, records: structuredClone(items) },
+      };
+      return { ok: true };
+    },
+    replaceWorkbook: async ({ items, sync: metadata }) => {
+      if (workbook.sha256 === "assigned-addition") {
+        throw Object.assign(new Error("EXCEL_BINDING_FAILED"), { code: "EXCEL_BINDING_FAILED" });
+      }
+      workbook = {
+        ok: true,
+        sha256: "replaced-rename",
+        items: structuredClone(items),
+        sync: { revision: metadata.revision, itemCount: items.length },
+        baseline: { revision: metadata.revision, itemCount: items.length, records: structuredClone(items) },
+      };
+      return { ok: true };
+    },
+  };
+
+  const first = await sync.syncWorkbook(callbacks);
+  assert.equal(first.ok, false);
+  assert.equal(first.errorCode, "EXCEL_BINDING_FAILED");
+  assert.equal(api.state.items.some((item) => item.id === assignedId && item.model === "3333"), true);
+
+  workbook.items[1].model = "4444";
+  workbook.sha256 = "renamed-after-failed-ack";
+  const recovered = await sync.syncWorkbook(callbacks);
+
+  assert.equal(recovered.ok, true);
+  assert.equal(recovered.operations, 1);
+  assert.equal(api.state.items.find((item) => item.id === assignedId)?.model, "4444");
+  assert.equal(workbook.baseline.records.find((item) => item.id === assignedId)?.model, "4444");
+});
+
+test("unacknowledged, stale, or unanchored history cannot authorize a missing baseline ID", async (t) => {
+  const existing = { id: "existing", model: "KEEP", category: "Chair", stock: 1, sourceRow: 5 };
+  const addition = { id: "local-addition", model: "3333", category: "Chair", stock: 0, sourceRow: 6 };
+  const cases = [
+    { name: "unacknowledged" },
+    { name: "stale acknowledgement", commitRevision: 0 },
+    { name: "unanchored acknowledgement", commitRevision: 1,
+      baseItems: [{ id: "other", model: "OTHER", category: "Chair", stock: 1 }] },
+  ];
+  for (const fixture of cases) {
+    await t.test(fixture.name, async (nested) => {
+      const directory = fs.mkdtempSync(path.join(os.tmpdir(), "tek-untrusted-history-"));
+      nested.after(() => fs.rmSync(directory, { recursive: true, force: true }));
+      const api = fakeAlibabaApi([existing, addition]);
+      api.state.revision = 1;
+      const sync = service(directory, api);
+      const entry = sync.outbox.enqueueWorkbookTransaction({
+        baseRevision: 0,
+        baseItems: fixture.baseItems || [existing],
+        operations: [{ type: "upsert", item: addition }],
+        workbookSha256: "history-only",
+      });
+      if (fixture.commitRevision != null) {
+        sync.outbox.acknowledge(entry.opId, { commitRevision: fixture.commitRevision });
+        sync.outbox.pruneAcknowledged();
+      }
+      await assert.rejects(sync.syncWorkbook({
+        readWorkbook: async () => ({
+          ok: true, sha256: "missing-baseline", items: [existing, { ...addition, model: "4444" }],
+          sync: { revision: 0, itemCount: 1 },
+          baseline: { revision: 0, itemCount: 1, records: [existing] },
+        }),
+        assignIds: async () => { throw new Error("unexpected ID assignment"); },
+        acknowledge: async () => { throw new Error("unexpected acknowledgement"); },
+        replaceWorkbook: async () => { throw new Error("unexpected replacement"); },
+      }), { code: "WORKBOOK_MERGE_CONFLICT" });
+      assert.equal(api.batchRequests.length, 0);
+    });
+  }
+});
+
+test("a recovered acknowledged addition still conflicts with a concurrent cloud edit", async (t) => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), "tek-recovered-addition-conflict-"));
+  t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
+  const existing = { id: "existing", model: "KEEP", category: "Chair", stock: 1, sourceRow: 5 };
+  const acknowledged = { id: "local-addition", model: "3333", category: "Chair", stock: 0, sourceRow: 6 };
+  const api = fakeAlibabaApi([existing, { ...acknowledged, model: "5555" }]);
+  api.state.revision = 2;
+  const sync = service(directory, api);
+  const entry = sync.outbox.enqueueWorkbookTransaction({
+    baseRevision: 0,
+    baseItems: [existing],
+    operations: [{ type: "upsert", item: acknowledged }],
+    workbookSha256: "acknowledged-addition",
+  });
+  sync.outbox.acknowledge(entry.opId, { commitRevision: 1 });
+  sync.outbox.pruneAcknowledged();
+  await assert.rejects(sync.syncWorkbook({
+    readWorkbook: async () => ({
+      ok: true, sha256: "changed-after-ack", items: [existing, { ...acknowledged, model: "4444" }],
+      sync: { revision: 0, itemCount: 1 },
+      baseline: { revision: 0, itemCount: 1, records: [existing] },
+    }),
+    assignIds: async () => { throw new Error("unexpected ID assignment"); },
+    acknowledge: async () => { throw new Error("unexpected acknowledgement"); },
+    replaceWorkbook: async () => { throw new Error("unexpected replacement"); },
+  }), { code: "WORKBOOK_MERGE_CONFLICT" });
+  assert.equal(api.batchRequests.length, 0);
+});
+
 test("client errors do not cross endpoints", async (t) => {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), "tek-api-no-4xx-failover-"));
   t.after(() => fs.rmSync(directory, { recursive: true, force: true }));

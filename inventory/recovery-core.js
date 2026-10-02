@@ -9,6 +9,10 @@
     conflicts: "查看并选择冲突资料", excel: "打开 Excel 检查", auth: "重新连接账号",
     update: "重新检查更新", folder: "打开本地诊断", help: "查看处理说明",
   };
+  const TRANSIENT_CLOUD_READ_CODES = new Set([
+    "API_NETWORK_UNREACHABLE", "API_REQUEST_TIMEOUT", "ENETUNREACH", "ECONNRESET",
+    "ECONNREFUSED", "EAI_AGAIN", "OFFLINE",
+  ]);
   function advice(value) {
     const code = String(value?.errorCode || value?.code || value || "UNKNOWN_ERROR").toUpperCase();
     let kind = "unknown", title = "这一步暂时没有完成", detail = "可以稍后重试或发送诊断。请保留当前资料。", actions = ["report", "later", "help"];
@@ -16,8 +20,9 @@
       kind = "conflict"; title = "两边的资料需要核对";
       detail = "系统不会自动选一边覆盖。查看差异后逐项选择，也可以先继续查看库存。";
       actions = [/MIGRATION|INVALID_STOCK|DUPLICATE/.test(code) ? "excel" : "conflicts", "later", "report"];
-    } else if (/UNAUTHORIZED|HTTP_40[13]|AUTH_FAILED/.test(code)) {
+    } else if (/SYNC_TOKEN_MISSING|SYNC_TOKEN_INVALID|UNAUTHORIZED|HTTP_40[13]|AUTH_FAILED/.test(code)) {
       kind = "auth"; title = "连接授权需要更新"; detail = "重新连接后再同步；暂时也能查看已加载的库存。";
+      if (code === "SYNC_TOKEN_INVALID") detail = "同步密钥格式不正确。请用授权密钥重新连接；本机库存不会被重置。";
       actions = ["auth", "later", "report"];
     } else if (/SHA256|SIGNATURE|DOWNGRADE|MANIFEST.*INVALID|URL_INVALID/.test(code)) {
       kind = "verification"; title = "更新包未通过校验"; detail = "安装已停止，当前版本保留。可以重新检查更新，或发送诊断。";
@@ -51,11 +56,12 @@
     async function run(action, button) {
       if (action.id === "later") { dismissed = last.code; panel.hidden = true; return; }
       if (running) return;
+      const recovering = last;
       running = true; button.disabled = true; status.textContent = "正在处理…你可以继续查看库存。";
       let timer;
       try {
         const result = await Promise.race([
-          Promise.resolve().then(() => handlers[action.id]?.(last)),
+          Promise.resolve().then(() => handlers[action.id]?.(recovering)),
           new Promise((_, reject) => { timer = setTimeout(() => reject(new Error("ACTION_TIMEOUT")), options.timeoutMs || 20000); }),
         ]);
         if (result === false || result?.ok === false) {
@@ -67,13 +73,13 @@
             ? result?.sent > 0 ? `已发送 ${result.sent} 条诊断。${result.pending > 0 ? `其余 ${result.pending} 条将在后台补报。` : ""}`
               : "暂无待发送诊断；已有本地日志可在帮助中导出。"
             : "已完成此操作。";
-          if (result === true && action.id === "retry") clear();
+          if (result === true && (action.id === "retry" || action.id === "update") && last === recovering) clear();
         }
       } catch { status.textContent = "处理尚未完成；后台操作可能仍在进行。可以先继续查看，稍后再检查。"; }
       finally { clearTimeout(timer); running = false; button.disabled = false; }
     }
     function show(value, force = false) {
-      last = advice(value);
+      last = { ...advice(value), source: String(value?.source || "") };
       if (!force && dismissed === last.code) return;
       title.textContent = last.title; detail.textContent = last.detail; code.textContent = "错误编号：" + last.code;
       status.textContent = ""; actions.replaceChildren();
@@ -86,7 +92,22 @@
       panel.hidden = false;
     }
     function clear() { last = null; dismissed = ""; panel.hidden = true; }
-    return { show, clear, reopen: () => { if (last) show(last.code, true); }, panel };
+    function captureCloudReadFailure() {
+      return last?.source === "cloud-read" && TRANSIENT_CLOUD_READ_CODES.has(last.code) ? last : null;
+    }
+    function clearCloudReadFailure(expected) {
+      if (!expected || last !== expected || captureCloudReadFailure() !== expected) return false;
+      clear();
+      return true;
+    }
+    return {
+      show,
+      clear,
+      captureCloudReadFailure,
+      clearCloudReadFailure,
+      reopen: () => { if (last) show(last, true); },
+      panel,
+    };
   }
   return { advice, mount };
 });

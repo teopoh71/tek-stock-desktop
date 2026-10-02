@@ -1,4 +1,4 @@
-﻿(() => {
+(() => {
   "use strict";
 
   const payload = window.INVENTORY_PAYLOAD || { items: [] };
@@ -23,11 +23,10 @@
   const diagnosticDailyStorageKey = "tek-stock-diagnostic-daily-v1";
   const imageVersion = "20260726-exact-photo-sync-v3";
   const allCategory = "__ALL__";
-  const defaultChairCategory = String.fromCharCode(0x9910, 0x6905);
   const state = {
     query: "",
     stockFilter: "all",
-    selectedCategories: new Set([defaultChairCategory]),
+    selectedCategories: new Set(),
     sortDirection: "desc",
     activeId: "",
   };
@@ -139,9 +138,12 @@
   async function reportMaintenanceState() {
     try { return await window.TekStockMaintenance?.reportState(maintenanceState()); } catch { return { ok: false }; }
   }
-  function showRecovery(error) {
-    recoveryUi?.show(error);
+  function showRecovery(error, options = {}) {
     const code = typeof error === "string" ? error : error?.errorCode || error?.code || "UNKNOWN_ERROR";
+    const recoveryValue = options.source
+      ? { ...(error && typeof error === "object" ? error : {}), errorCode: code, source: options.source }
+      : error;
+    recoveryUi?.show(recoveryValue);
     try { void window.TekStockDiagnostics?.append({ stage: "app.error", ok: false, errorCode: code }).catch(() => {}); } catch {}
   }
   async function maintenanceCheck() {
@@ -1260,7 +1262,7 @@
     }
   }
 
-  async function applyNewerDesktopUpdate(automatic = false) {
+  async function applyNewerDesktopUpdate(automatic = false, options = {}) {
     if (!window.TekStockUpdater?.update) {
       await refreshDesktopUpdateAlert(true);
       return;
@@ -1270,7 +1272,9 @@
       const result = automatic
         ? await window.TekStockUpdater.autoUpdate()
         : await window.TekStockUpdater.update();
-      renderUpdateReceipt(result?.receipt, true);
+      if (!options.preserveDataSyncFailure || result?.updateAvailable === true || !result?.ok) {
+        renderUpdateReceipt(result?.receipt, true);
+      }
       if (!result?.ok) {
         const error = new Error(result?.errorCode || "UPDATE_FAILED");
         error.code = result?.errorCode || "UPDATE_FAILED";
@@ -1286,8 +1290,10 @@
 
   async function handleUpdateClick() {
     const dataSynchronized = await updateInventory();
-    if (!dataSynchronized) return false;
-    return applyNewerDesktopUpdate();
+    // A sync failure must not prevent checking for a release that repairs it.
+    // The native updater independently verifies pending edits, conflicts,
+    // workbook locks and backup integrity before it can close the app.
+    return applyNewerDesktopUpdate(false, { preserveDataSyncFailure: !dataSynchronized });
   }
 
   function searchable(item) {
@@ -1422,10 +1428,7 @@
       ? filtered
       : filterSortCore.sortItems(filtered, state.sortDirection, { itemStock });
     el.resultCount.textContent = list.length.toLocaleString();
-    el.inventoryGrid.innerHTML = list.map(cardMarkup).join("");
-    el.inventoryGrid.querySelectorAll("img.product-image").forEach((image) => {
-      image.addEventListener("error", handleProductImageError);
-    });
+    window.TekStockGridRender.render(el.inventoryGrid, list, cardMarkup, handleProductImageError);
     el.loadMoreButton.hidden = true;
     el.emptyState.hidden = list.length !== 0;
     updateSummary();
@@ -2281,7 +2284,7 @@
     setTimeout(() => input.focus(), 0);
     return new Promise((resolve) => {
       dialog.addEventListener("close", () => {
-        const token = dialog.returnValue === "confirm" ? String(input.value || "").trim() : "";
+        const token = dialog.returnValue === "confirm" ? String(input.value || "") : "";
         input.value = "";
         resolve(token);
       }, { once: true });
@@ -2318,7 +2321,7 @@
       return false;
     }
     try {
-      const result = await window.TekStockRuntime.saveUploadToken(String(token).trim());
+      const result = await window.TekStockRuntime.saveUploadToken(String(token));
       if (!result?.ok) throw new Error(result?.error || "同步密钥保存失败");
       remoteConfig.uploadToken = String(token).trim();
       rejectedUploadToken = "";
@@ -2335,7 +2338,7 @@
     const detail = [error?.code, error?.name, error?.message]
       .filter(Boolean)
       .join(" ");
-    return /(?:SYNC_TOKEN_MISSING|UNAUTHORIZED|HTTP(?:_|[ -])?401)/i.test(detail);
+    return /(?:SYNC_TOKEN_MISSING|SYNC_TOKEN_INVALID|UNAUTHORIZED|HTTP(?:_|[ -])?401)/i.test(detail);
   }
 
   async function clearRejectedDesktopUploadToken() {
@@ -2493,7 +2496,7 @@
         toast(excelUpdated ? "资料已同步到所有设备" : "云端已同步，Excel 未确认，请按 Update 重试");
         return true;
       } catch (error) {
-        if (/SYNC_TOKEN_MISSING|UNAUTHORIZED/.test(String(error?.message || ""))
+        if (isUploadTokenRejection(error)
             && options.authRetry !== true) {
           return recoverRejectedUploadToken(allowMergeRetry, { ...options, authRetry: true });
         }
@@ -2726,6 +2729,7 @@
 
   async function loadRemoteData(showToast = false, options = {}) {
     if (!window.TekStockCloud?.snapshot) return false;
+    const cloudReadRecoveryAtStart = recoveryUi?.captureCloudReadFailure() || null;
     const diagnosticStartedAt = performance.now();
     reportDiagnostic("refresh_started", {
       status: "started",
@@ -2749,7 +2753,11 @@
         });
       }
       const incomingRevision = Number(remotePayload.revision) || 0;
-      cloudLastErrorCode = "";
+      const cachedSnapshot = remotePayload.cloudState === "cached";
+      const cachedErrorCode = cachedSnapshot
+        ? diagnosticErrorCode({ code: remotePayload.offlineError }, "CLOUD_CACHE_UNAVAILABLE")
+        : "";
+      cloudLastErrorCode = cachedErrorCode;
       const incomingItemCount = remotePayload.items.length;
       const incomingFingerprint = await cloudDataFingerprint(remotePayload.items);
       const unchangedRemoteSnapshot = remoteReadCore.isUnchangedSnapshot({
@@ -2766,7 +2774,7 @@
       lastRemoteUpdatedAt = Date.parse(remotePayload.updatedAt || "") || 0;
       lastRemoteRevision = incomingRevision;
       lastRemoteItemCount = remotePayload.items.length;
-      cloudDataState = remotePayload.cloudState === "cached" ? "cached" : "live";
+      cloudDataState = cachedSnapshot ? "cached" : "live";
       updateCloudVersionBadge();
       lastRemoteImageSetVersion = String(remotePayload.imageSetVersion || "");
       const remoteItems = remotePayload.items.map((item) => ({
@@ -2777,6 +2785,20 @@
       lastRemoteFingerprint = incomingFingerprint;
       hasCachedCloudPayload = saveCachedCloudPayload(remotePayload) || hasCachedCloudPayload;
       if (unchangedRemoteSnapshot) {
+        if (cachedSnapshot) {
+          showRecovery(cachedErrorCode, { source: "cloud-read" });
+          reportDiagnostic("refresh_cached", {
+            status: "cached",
+            phase: "cloud_download",
+            errorCode: cachedErrorCode,
+            revision: lastRemoteRevision,
+            itemCount: lastRemoteItemCount,
+            durationMs: performance.now() - diagnosticStartedAt,
+            rendered: false,
+          }, true);
+          return false;
+        }
+        recoveryUi?.clearCloudReadFailure(cloudReadRecoveryAtStart);
         reportDiagnostic("refresh_succeeded", {
           status: "ok",
           phase: "cloud_download",
@@ -2815,11 +2837,25 @@
       });
       buildCategories();
       render();
+      if (cachedSnapshot) {
+        showRecovery(cachedErrorCode, { source: "cloud-read" });
+        reportDiagnostic("refresh_cached", {
+          status: "cached",
+          phase: "cloud_download",
+          errorCode: cachedErrorCode,
+          revision: lastRemoteRevision,
+          itemCount: baseItems.length,
+          durationMs: performance.now() - diagnosticStartedAt,
+        }, true);
+        if (showToast) toast("正在显示上次完整云端资料；等待网络恢复后再同步");
+        return false;
+      }
       if (showToast) {
         toast(hasPendingEdits()
           ? "云端已更新，本机尚有未上传修改"
           : `已更新至云端版本 ${lastRemoteRevision}`);
       }
+      recoveryUi?.clearCloudReadFailure(cloudReadRecoveryAtStart);
       reportDiagnostic("refresh_succeeded", {
         status: "ok",
         phase: "cloud_download",
@@ -2833,7 +2869,7 @@
     } catch (error) {
       console.error(error);
       cloudLastErrorCode = diagnosticErrorCode(error, "CLOUD_DOWNLOAD_FAILED");
-      showRecovery(cloudLastErrorCode);
+      showRecovery(cloudLastErrorCode, { source: "cloud-read" });
       cloudDataState = hasCachedCloudPayload ? "cached" : "offline";
       updateCloudVersionBadge();
       reportDiagnostic("refresh_failed", {
@@ -2858,7 +2894,7 @@
     cloudRetryTimer = setTimeout(async () => {
       cloudRetryTimer = null;
       const loaded = await loadRemoteData(false, { skipRenderWhenUnchanged: true });
-      if (loaded) {
+      if (loaded && cloudDataState === "live") {
         await initializeExcel();
       } else {
         scheduleCloudRetry();
@@ -2874,7 +2910,9 @@
       if (hasPendingEdits()) return uploadInventoryData(false, { automatic: true });
       const previousRevision = lastRemoteRevision;
       const loaded = await loadRemoteData(false, { skipRenderWhenUnchanged: true });
-      if (loaded && window.TekStockExcel) {
+      if (!loaded || cloudDataState !== "live") return false;
+      if (!excelInitialized) await initializeExcel();
+      if (window.TekStockExcel) {
         if (window.TekStockCloud?.syncWorkbook) {
           const synced = await syncWorkbookWithTokenRetry();
           if (synced?.retryRequired === true) {
@@ -2889,24 +2927,32 @@
           await syncExcelFromApp(false);
         }
       }
-      return loaded;
+      return true;
     } finally {
       automaticSyncActive = false;
     }
   }
 
   async function updateInventory() {
-    const cloudLoaded = await loadRemoteData(true);
+    let cloudLoaded = await loadRemoteData(true);
+    let manualCloudAuthRetried = false;
+    if ((!cloudLoaded || cloudDataState !== "live")
+        && isUploadTokenRejection({ code: cloudLastErrorCode })) {
+      manualCloudAuthRetried = true;
+      if (await ensureDesktopUploadToken({ forcePrompt: true, allowPrompt: true })) {
+        cloudLoaded = await loadRemoteData(true, { manualAuthRetry: true });
+      }
+    }
     if (!cloudLoaded || cloudDataState !== "live") {
       scheduleCloudRetry();
-      showRecovery(cloudLastErrorCode || "CLOUD_UNAVAILABLE");
+      showRecovery(cloudLastErrorCode || "CLOUD_UNAVAILABLE", { source: "cloud-read" });
       toast(`云端未连接（${cloudLastErrorCode || "CLOUD_UNAVAILABLE"}），未读取 Excel，避免覆盖资料`);
       return false;
     }
     if (remoteConfig.readOnly) return false;
     if (window.TekStockCloud?.syncWorkbook) {
       try {
-        if (!(await ensureDesktopUploadToken())) return false;
+        if (!manualCloudAuthRetried && !(await ensureDesktopUploadToken())) return false;
         if (window.TekStockExcel?.prepareUpdate) {
           const prepared = await window.TekStockExcel.prepareUpdate();
           if (!prepared?.ok) {
@@ -3099,7 +3145,7 @@
         console.error(error);
       }
     }
-    if (cloudLoaded || cloudDataState === "cached") await initializeExcel();
+    if (cloudLoaded && cloudDataState === "live") await initializeExcel();
     if (!cloudLoaded) scheduleCloudRetry();
     await uploadDailyDiagnostic();
     setInterval(synchronizeCloudAutomatically, 15000);

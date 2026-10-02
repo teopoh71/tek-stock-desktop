@@ -74,6 +74,8 @@ test("diagnostics keep only allowlisted operational fields and redact sensitive 
     "errorCode",
     "revision",
     "counts",
+    "deviceId",
+    "authorityId",
   ]);
   assert.equal(entry.appVersion, "1.5.10");
   assert.equal(entry.ok, false);

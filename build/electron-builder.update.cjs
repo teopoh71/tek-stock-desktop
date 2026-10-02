@@ -48,6 +48,6 @@ module.exports = {
     shortcutName: "TEK STOCK",
     deleteAppDataOnUninstall: false,
     runAfterFinish: false,
-    artifactName: "TEK-STOCK-新加坡库存-${version}-${arch}.${ext}",
+    artifactName: "TEK-STOCK-Singapore-${version}-${arch}.${ext}",
   },
 };

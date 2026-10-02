@@ -155,7 +155,7 @@ test("installer download prefers Electron networking so Windows proxy settings a
   assert.equal(observations.redirect, "manual");
 });
 
-test("manifest check retries bounded Hangzhou OSS primary then falls back to Singapore OSS", async () => {
+test("manifest check retries the maintenance service then uses its configured fallback", async () => {
   const handlers = new Map();
   const seen = [];
   const receipts = [];
@@ -179,9 +179,9 @@ test("manifest check retries bounded Hangzhou OSS primary then falls back to Sin
   const status = await handlers.get("tek-stock-updater-status")();
   assert.equal(status.ok, true);
   assert.deepEqual(seen.map(({ url }) => new URL(url).hostname), [
-    "tek-stock-releases-cn-20260801.oss-cn-hangzhou.aliyuncs.com",
-    "tek-stock-releases-cn-20260801.oss-cn-hangzhou.aliyuncs.com",
-    "tek-stock-releases-sg-20260729.oss-ap-southeast-1.aliyuncs.com",
+    "tek-stock-maintenance.teopoh72.workers.dev",
+    "tek-stock-maintenance.teopoh72.workers.dev",
+    "tek-stock-inventory-sg.teopoh72.workers.dev",
   ]);
   assert.ok(seen.every(({ timeoutMs }) => timeoutMs === 8_000));
   assert.deepEqual(receipts, [{
@@ -194,7 +194,7 @@ test("manifest check retries bounded Hangzhou OSS primary then falls back to Sin
     newerVersionFound: true,
     installerFound: true,
     channel: "windows10",
-    manifestSource: "singapore",
+    manifestSource: "other",
   }]);
 });
 
@@ -255,7 +255,7 @@ test("Update does not download or launch when the installed app is current", asy
     newerVersionFound: false,
     installerFound: true,
     channel: "windows10",
-    manifestSource: "hangzhou",
+    manifestSource: "other",
   });
 });
 

@@ -18,8 +18,8 @@ const executable = path.resolve(
   process.env.TEK_STOCK_SMOKE_EXECUTABLE
     || path.join(project, "dist-update", "win-unpacked", "TEK STOCK.exe"),
 );
-const oldArtifact = path.join(project, "dist-update", `TEK-STOCK-新加坡库存-${priorVersion}-x64.exe`);
-const currentArtifact = path.join(project, "dist-update", `TEK-STOCK-新加坡库存-${packageVersion}-x64.exe`);
+const oldArtifact = process.env.TEK_STOCK_SMOKE_OLD_ARTIFACT || path.join(project, "dist-update", `TEK-STOCK-Singapore-${priorVersion}-x64.exe`);
+const currentArtifact = path.join(project, "dist-update", `TEK-STOCK-Singapore-${packageVersion}-x64.exe`);
 const sevenZip = "C:\\Users\\edwin\\AppData\\Local\\electron-builder\\Cache\\7zip@1.0.0\\7zip-win-x64-1nrf7\\bin\\7za.exe";
 const nonce = crypto.randomBytes(24).toString("hex");
 const root = fs.mkdtempSync(path.join(os.tmpdir(), "tek-stock-packaged-smoke-"));
@@ -364,6 +364,7 @@ async function main() {
     const afterUpdate = snapshotFiles(stateFiles);
     assert.deepEqual(afterUpdate, beforeUpdate);
 
+    fs.mkdirSync(path.join(project, "outputs"), { recursive: true });
     const screenshotOutputs = new Map();
     for (const result of verifyResults) {
       const target = path.join(project, "outputs", `packaged-smoke-${packageVersion}-${result.role}.png`);

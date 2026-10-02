@@ -56,13 +56,20 @@ $public=[System.Net.Http.HttpClient]::new()
 $public.Timeout=[TimeSpan]::FromMinutes(6)
 $download=Join-Path $root "outputs\verified-$name"
 if(!(Test-Path $download) -or (Get-Item $download).Length -ne $size -or (Get-FileHash -Algorithm SHA256 $download).Hash.ToLowerInvariant() -ne $hash){
- $r=$public.GetAsync($origin).GetAwaiter().GetResult()
- if(!$r.IsSuccessStatusCode){throw "PUBLIC_ASSET_HTTP_$([int]$r.StatusCode)"}
+ for($attempt=0;$attempt -lt 3;$attempt++){
+  $r=$public.GetAsync($origin).GetAwaiter().GetResult()
+  if($r.IsSuccessStatusCode){break}
+  if([int]$r.StatusCode -notin @(404,429,500,502,503,504) -or $attempt -eq 2){throw "PUBLIC_ASSET_HTTP_$([int]$r.StatusCode)"}
+  $r.Dispose()
+ }
  $bytes=$r.Content.ReadAsByteArrayAsync().GetAwaiter().GetResult()
  [IO.File]::WriteAllBytes($download,$bytes)
 }
 if((Get-Item $download).Length -ne $size -or (Get-FileHash -Algorithm SHA256 $download).Hash.ToLowerInvariant() -ne $hash){throw 'PUBLIC_ASSET_VERIFICATION_FAILED'}
 Write-Output "PUBLIC_ASSET_VERIFIED $version $size $hash"
+# Let Wrangler renew its existing OAuth session before reading the access token.
+$wrangler=Get-ChildItem (Join-Path $env:LOCALAPPDATA 'npm-cache\_npx\*\node_modules\wrangler\bin\wrangler.js') -File -ErrorAction SilentlyContinue|Select-Object -First 1
+if($wrangler){& node $wrangler.FullName whoami *> $null;if($LASTEXITCODE -ne 0){throw 'RELEASE_AUTH_REFRESH_FAILED'}}
 $c=Get-Content -Raw "$env:APPDATA\xdg.config\.wrangler\config\default.toml"
 $cfToken=[regex]::Match($c,'(?m)^oauth_token\s*=\s*"([^"\r\n]+)"').Groups[1].Value
 $cf=[System.Net.Http.HttpClient]::new()

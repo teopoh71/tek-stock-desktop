@@ -3181,6 +3181,9 @@
     commit: commitMovementPatch,
     open: openDetail,
     readOnly: () => !!remoteConfig.readOnly,
+    imageSource: (item) => versionedImageSource(item.image),
+    imageFallback: (item) => String(packagedImages.get(item.id) || "").trim(),
+    onImageError: handleProductImageError,
     escapeHtml,
     toast,
   }) || null;

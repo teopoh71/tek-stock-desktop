@@ -48,8 +48,19 @@
       $("mvOversoldTile").classList.toggle("is-alert", data.oversold > 0);
     }
 
+    function thumb(item) {
+      const source = api.imageSource(item);
+      return `<span class="mv-thumb">${source
+        ? `<img src="${esc(source)}" data-fallback="${esc(api.imageFallback(item))}" alt="" loading="lazy">`
+        : `<span class="image-fallback" aria-label="No photo">HP</span>`}</span>`;
+    }
+
     function modelCell(entry) {
-      return `<button class="mv-link" type="button" data-mv-open="${esc(entry.item.id)}">${esc(entry.item.model)}</button>`;
+      return `<button class="mv-link mv-model" type="button" data-mv-open="${esc(entry.item.id)}">${thumb(entry.item)}<span>${esc(entry.item.model)}</span></button>`;
+    }
+
+    function watchImages(container) {
+      container.querySelectorAll(".mv-thumb img").forEach((image) => image.addEventListener("error", api.onImageError));
     }
 
     function renderOrders() {
@@ -67,6 +78,7 @@
           <td><span class="mv-pill ${kindPill[entry.kind]}">${kindLabels[entry.kind]}</span></td>
           <td class="mv-r">${entry.kind === "booked" && !readOnly ? lineButton("deliver", entry, "标记已送") : ""}</td></tr>`;
       }).join("") || `<tr><td colspan="7" class="mv-empty">${orderFilter === "done" ? "还没有用新方式登记的送货。" : "没有未送的订单。打开产品，按“卖出 / 客户订货”登记。"}</td></tr>`;
+      watchImages($("ordersRows"));
     }
 
     function renderIncoming() {
@@ -78,6 +90,7 @@
         <td class="mv-r mv-num">${entry.qty}</td>
         <td class="mv-r">${readOnly ? "" : lineButton("receive", entry, "确认到货入仓")}</td></tr>`).join("")
         || `<tr><td colspan="5" class="mv-empty">目前没有在路上的货。打开产品，按“登记在路上”加入。</td></tr>`;
+      watchImages($("incomingRows"));
     }
 
     function lineButton(type, entry, label) {

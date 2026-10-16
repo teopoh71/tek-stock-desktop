@@ -112,7 +112,9 @@ test("focuses an already-open WPS workbook instead of opening a second copy", ()
   assert.equal(observed.command, "powershell.exe");
   assert.match(observed.script, /Ket\.Application/);
   assert.doesNotMatch(observed.script, /BindToMoniker/);
-  assert.match(observed.script, /MainWindowHandle/);
+  // WPS shows "WPS Office" as its title and may hide the workbook window, so the
+  // probe must not depend on a window title that contains the file name.
+  assert.doesNotMatch(observed.script, /MainWindowTitle/);
   assert.match(observed.script, /Activate\(\)/);
   assert.match(observed.script, /库存总表/);
   assert.match(observed.script, /Show-TekInventory|Goto|A5/);

@@ -49,6 +49,11 @@ function Find-TekWorksheet($book, [string]$name) {
 
 const SHOW_TEK_INVENTORY = String.raw`
 function Show-TekInventory($application, $book) {
+  # Showing the sheet only changes the view (window, zoom, selection, filter
+  # arrows). Keep a saved workbook marked as saved so the next sync is not
+  # blocked by OPEN_WORKBOOK_CHANGED_DURING_SYNC.
+  $wasSaved = $false
+  try { $wasSaved = [bool]$book.Saved } catch {}
   try { [void]($application.UserControl = $true) } catch {}
   try { [void]($application.Interactive = $true) } catch {}
   try { [void]($application.Visible = $true) } catch {}
@@ -83,6 +88,7 @@ function Show-TekInventory($application, $book) {
     try { $application.Goto($sheet.Range('A1'), $true) } catch {}
     try { $application.Goto($sheet.Range('A5'), $true) } catch { try { [void]$sheet.Range('A5').Select() } catch {} }
   }
+  if ($wasSaved) { try { [void]($book.Saved = $true) } catch {} }
 }
 `;
 
@@ -349,9 +355,10 @@ function focusOpenWorkbook(file, options = {}) {
     FIND_ALREADY_OPEN_WORKBOOK,
     FIND_WORKSHEET_BY_NAME,
     SHOW_TEK_INVENTORY,
-    "$expected=[IO.Path]::GetFileName($env:TEK_STOCK_WORKBOOK)",
-    "$visible=@(Get-Process -Name EXCEL,et,wps -ErrorAction SilentlyContinue|Where-Object{$_.MainWindowHandle -ne 0 -and [string]$_.MainWindowTitle -like ($expected+\"*\")})",
-    "if($visible.Count -eq 0){[Console]::Out.Write(([pscustomobject]@{ok=$true;alreadyOpen=$false;path=$env:TEK_STOCK_WORKBOOK}|ConvertTo-Json -Compress));exit}",
+    // The file is locked, so it is open somewhere. WPS's tabbed window is titled
+    // "WPS Office" and the workbook window itself may be hidden, so do not require
+    // a title match: look it up through the running Office objects (this never
+    // opens a closed file) and let Show-TekInventory make its window visible.
     "try{$result=Find-TekAlreadyOpenWorkbook $env:TEK_STOCK_WORKBOOK}catch{[Console]::Out.Write(([pscustomobject]@{ok=$true;alreadyOpen=$false;path=$env:TEK_STOCK_WORKBOOK}|ConvertTo-Json -Compress));exit}",
     "Show-TekInventory $result.Application $result.Workbook",
     "[Console]::Out.Write(([pscustomobject]@{ok=$true;alreadyOpen=$true;path=[string]$result.Workbook.FullName}|ConvertTo-Json -Compress))",

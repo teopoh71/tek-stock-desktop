@@ -49,6 +49,20 @@
         </div>
       </section>
 
+      <section class="mv-tiles" aria-label="今天要关注">
+        <button class="mv-tile" type="button" data-mv-jump="stock"><strong class="mv-num" id="mvAvailable">—</strong><span>可卖数量 (pcs)</span></button>
+        <button class="mv-tile" type="button" data-mv-jump="orders"><strong class="mv-num" id="mvDueSoon">—</strong><span>7 天内要送货</span></button>
+        <button class="mv-tile" type="button" data-mv-jump="incoming"><strong class="mv-num" id="mvTransit">—</strong><span>在路上 (未到货)</span></button>
+        <button class="mv-tile" type="button" data-mv-jump="orders" id="mvOversoldTile"><strong class="mv-num" id="mvOversold">—</strong><span>订单超过库存的型号</span></button>
+      </section>
+
+      <nav class="mv-tabs" id="viewTabs" role="tablist" aria-label="工作页面">
+        <button type="button" role="tab" data-view="stock" aria-selected="true">库存</button>
+        <button type="button" role="tab" data-view="orders" aria-selected="false">订单 / 送货</button>
+        <button type="button" role="tab" data-view="incoming" aria-selected="false">到货</button>
+      </nav>
+
+      <div id="stockView">
       <section class="control-panel">
         <label class="search-box">
           <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg>
@@ -81,6 +95,26 @@
         <span>∅</span>
         <strong>No items found</strong><p>Try another search or category.</p>
       </div>
+      </div>
+
+      <section id="ordersView" class="mv-view" hidden>
+        <div class="mv-chips">
+          <button class="mv-chip" type="button" data-order-filter="open" aria-pressed="true">未送货</button>
+          <button class="mv-chip" type="button" data-order-filter="done" aria-pressed="false">已送货</button>
+          <button class="mv-chip" type="button" data-order-filter="all" aria-pressed="false">全部</button>
+        </div>
+        <div class="mv-table-box"><table class="mv-table">
+          <thead><tr><th>送货日期</th><th>客户</th><th>PO</th><th>型号</th><th class="mv-r">数量</th><th>状态</th><th></th></tr></thead>
+          <tbody id="ordersRows"></tbody>
+        </table></div>
+      </section>
+
+      <section id="incomingView" class="mv-view" hidden>
+        <div class="mv-table-box"><table class="mv-table">
+          <thead><tr><th>预计到货</th><th>货柜 / PI</th><th>型号</th><th class="mv-r">数量</th><th></th></tr></thead>
+          <tbody id="incomingRows"></tbody>
+        </table></div>
+      </section>
     </main>
   </div>
 
@@ -96,6 +130,8 @@
           <div><span>本次出貨變動</span><input class="stock-edit sold-edit" id="detailSoldNow" type="number" step="1" value="0" readonly></div>
           <div><span>累計售出</span><strong id="detailTotalSold">0</strong></div>
         </div>
+        <div class="mv-panel" id="movementPanel"></div>
+        <p class="mv-section-label">价格与文字记录</p>
         <dl class="detail-list">
           <div><dt>Cost</dt><dd><input class="detail-edit" id="detailCost" data-edit-field="cost" inputmode="decimal"></dd></div>
           <div><dt>Selling Price</dt><dd><input class="detail-edit" id="detailPrice" data-edit-field="sellingPriceText"></dd></div>
@@ -241,6 +277,8 @@
   <script src="inventory-data.js?v=20260726-exact-photo-sync-v3"></script>
   <script src="recovery-core.js?v=20260918"></script>
   <script src="grid-render-core.js?v=20260919"></script>
+  <script src="movement-core.js?v=20261016-orders-v1"></script>
+  <script src="movement-ui.js?v=20261016-orders-v1"></script>
   <script src="app.js?v=20260807-workbook-identity-v1"></script>
 </body>
 </html>

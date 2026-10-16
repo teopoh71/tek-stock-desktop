@@ -31,3 +31,18 @@ This is an Electron / Node.js desktop inventory application. The repository is d
 - Confirm the updater cannot recommend a lower/stale version as an update.
 
 The synthetic fixture under `test/fixtures` is for local testing only and is not production data.
+
+## Wholesale workflow (branch feature/wholesale-orders-ui, not released)
+
+The 库存 / 订单·送货 / 到货 tabs and the product-dialog buttons (卖出 / 到货入仓 / 放展厅 / 登记在路上)
+store structured lines inside the existing `outbound`, `arrival` and `showroom` text fields. There is
+no new Excel column and no cloud schema change, so older app versions keep working. Logic is in
+`inventory/movement-core.js` (tests: `test/movement-core.test.cjs`), UI in `inventory/movement-ui.js`.
+
+- outbound delivered: `CUSTOMER PO 25360 ( 4 PCS ) DD: 30-10-26` (counted as sold by the existing `( N PCS )` rule; stock −4)
+- outbound booked: `[已订] CUSTOMER PO 25360 ×4 DD: 30-10-26` (not sold; 可卖 = stock − booked)
+- arrival received: `4 PCS ( 16-10-26 ) PI 7226` (stock +4)
+- arrival in transit: `[在路上] PI 7226 ×4 ETA: 5-11-26` (stock unchanged until 确认到货)
+- showroom: `CUSTOMER C/S ( 1 PCS ) ON 16-10-26` (stock −1; 收回 restores it)
+
+Lines that do not match these formats are legacy free text: they are shown and kept, never counted.

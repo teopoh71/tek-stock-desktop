@@ -11,6 +11,8 @@
   const remoteReadCore = window.TekStockRemoteRead;
   const conflictResolutionCore = window.TekStockConflictResolution;
   const filterSortCore = window.TekStockFilterSort;
+  const movementCore = window.TekStockMovement;
+  let movementUi = null;
   let baseItems = payload.items || [];
   const originalItems = JSON.parse(JSON.stringify(baseItems));
   const packagedImages = new Map(baseItems.map((item) => [item.id, item.image || ""]));
@@ -1391,6 +1393,7 @@
     const stock = itemStock(item);
     const showroom = showroomQuantity(item);
     const sold = itemTotalSold(item);
+    const booked = movementCore ? movementCore.summarize(item).booked : 0;
     const showroomClass = showroom ? " in-showroom" : "";
     return `
       <article class="inventory-card${showroomClass}" data-id="${escapeHtml(item.id)}" style="animation-delay:${Math.min(index, 12) * 18}ms">
@@ -1410,6 +1413,7 @@
             <span>庫存 ${stock}</span>
             <span class="showroom-text">展廳 ${showroom}</span>
             <span class="sold-text">已售 ${sold}</span>
+            ${booked ? `<span class="booked-text">已訂 ${booked}</span>` : ""}
           </div>
         </div>
       </article>`;
@@ -1432,6 +1436,7 @@
     el.loadMoreButton.hidden = true;
     el.emptyState.hidden = list.length !== 0;
     updateSummary();
+    movementUi?.refresh();
   }
 
   function setDetailReadOnly(readOnly) {
@@ -1478,7 +1483,23 @@
     el.detailOutbound.value = item.outbound || "";
     el.detailSource.textContent = `${item.sourceFile} / ${item.sourceSheet} / Row ${item.sourceRow}`;
     setDetailReadOnly(!!remoteConfig.readOnly);
-    el.detailDialog.showModal();
+    movementUi?.renderDetail(item, showroomQuantity(item));
+    if (!el.detailDialog.open) el.detailDialog.showModal();
+  }
+
+  // Saves one structured movement (sale, arrival, showroom...) through the same
+  // local-edit → Excel → cloud path as the detail Save button.
+  async function commitMovementPatch(item, patch, message) {
+    if (remoteConfig.readOnly) return false;
+    localEdits[item.id] = { ...(localEdits[item.id] || {}), ...patch };
+    saveLocalEdits();
+    Object.assign(item, patch);
+    render();
+    if (state.activeId === item.id && el.detailDialog.open) openDetail(item);
+    toast(message);
+    await syncExcelFromApp(false);
+    await uploadInventoryData();
+    return true;
   }
 
   function openImagePreview() {
@@ -3154,6 +3175,16 @@
     });
     setInterval(uploadDailyDiagnostic, 60 * 60 * 1000);
   }
+
+  movementUi = window.TekStockMovementUi?.mount(document, {
+    items: () => baseItems,
+    commit: commitMovementPatch,
+    open: openDetail,
+    readOnly: () => !!remoteConfig.readOnly,
+    escapeHtml,
+    toast,
+  }) || null;
+  movementUi?.refresh();
 
   recoveryUi = window.TekStockRecovery?.mount(document, {
     retry: async () => { await reportMaintenanceState(); return updateInventory(); },

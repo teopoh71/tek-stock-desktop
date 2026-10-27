@@ -6,6 +6,7 @@ const path = require("node:path");
 const vm = require("node:vm");
 const asar = require("@electron/asar");
 const { validateAlibabaCloudConfig } = require("../alibaba-config.cjs");
+const { httpsEndpoint } = require("../maintenance-config.cjs");
 const { createHash } = require("node:crypto");
 
 const REQUIRED_CONCURRENT_RUNTIME = [
@@ -142,6 +143,17 @@ function verifyPackagedArchive(archiveFile, expectedVersion, projectDir = "") {
     packagedFiles.has("inventory/alibaba-cloud.example.json"),
     "packaged app archive is missing the runtime cloud configuration template",
   );
+  // Without these endpoints an installed computer silently keeps its error reports
+  // and never receives maintenance updates (seen on the 2026-10-16 QA build).
+  assert.ok(
+    packagedFiles.has("maintenance.defaults.json"),
+    "packaged app archive is missing maintenance.defaults.json (error reporting and updates would be off)",
+  );
+  const maintenance = JSON.parse(asar.extractFile(archiveFile, "maintenance.defaults.json").toString("utf8"));
+  for (const key of ["diagnosticsUrl", "manifestUrl"]) {
+    assert.doesNotThrow(() => httpsEndpoint(maintenance[key]), `packaged maintenance ${key} is invalid`);
+    assert.ok(httpsEndpoint(maintenance[key]), `packaged maintenance ${key} is empty`);
+  }
 
   if (projectDir) {
     for (const runtimeFile of SAFETY_CRITICAL_RUNTIME) {

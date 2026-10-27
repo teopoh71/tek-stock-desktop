@@ -66,6 +66,13 @@ async function minimalArchive(directory, options = {}) {
     authorityId: "runtime-authority",
     ossPublicBaseUrl: "https://assets.example.com",
   }));
+  if (options.maintenance !== false) {
+    fs.writeFileSync(path.join(appDirectory, "maintenance.defaults.json"), JSON.stringify(options.maintenance || {
+      diagnosticsUrl: "https://maintenance.example.com/v1/diagnostics",
+      manifestUrl: "https://maintenance.example.com/releases/latest.json",
+      autoUpdate: true,
+    }));
+  }
   for (const file of [
     "alibaba-config.cjs", "api-failover.cjs", "central-sync.cjs", "excel-live.cjs",
     "sync-outbox.cjs", "workbook-fingerprint.cjs", "workbook-location.cjs",
@@ -96,6 +103,15 @@ test("packaged app.asar accepts template-only config and rejects stale embedded 
     () => verifyPackagedArchive(stale.archive, "1.6.7"),
     /badge must match package version 1\.6\.07/,
   );
+});
+
+test("packaged app.asar must carry error-report and update endpoints", async (t) => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), "tek-stock-maintenance-"));
+  t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
+  const missing = await minimalArchive(directory, { maintenance: false });
+  assert.throws(() => verifyPackagedArchive(missing.archive, "1.6.7"), /missing maintenance\.defaults\.json/);
+  const empty = await minimalArchive(directory, { maintenance: { diagnosticsUrl: "", manifestUrl: "" } });
+  assert.throws(() => verifyPackagedArchive(empty.archive, "1.6.7"), /maintenance diagnosticsUrl is empty/);
 });
 
 test("desktop main process does not eagerly load ExcelJS or JSZip", () => {

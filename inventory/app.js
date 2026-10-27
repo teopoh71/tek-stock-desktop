@@ -1102,7 +1102,7 @@
     try {
       if (el.exportButton) {
         el.exportButton.disabled = true;
-        el.exportButton.textContent = "Opening...";
+        el.exportButton.textContent = "正在打开…";
       }
       const openWorkbook = () => (excelOpenCore?.openWorkbook
         ? excelOpenCore.openWorkbook(window.TekStockExcel, excelSyncPayload())
@@ -1396,7 +1396,7 @@
     const booked = movementCore ? movementCore.summarize(item).booked : 0;
     const showroomClass = showroom ? " in-showroom" : "";
     return `
-      <article class="inventory-card${showroomClass}" data-id="${escapeHtml(item.id)}" style="animation-delay:${Math.min(index, 12) * 18}ms">
+      <article class="inventory-card${showroomClass}" data-id="${escapeHtml(item.id)}" tabindex="0" role="button" aria-label="${escapeHtml(item.model)}，库存 ${stock}" style="animation-delay:${Math.min(index, 12) * 18}ms">
         <div class="product-image-wrap">
           ${imageMarkup(item)}
           <span class="stock-badge ${stockClass(stock)}">${stock}</span>
@@ -1410,10 +1410,10 @@
             <span>${zh(0x6210, 0x672c)} ${escapeHtml(priceText(item.cost))}</span>
           </div>
           <div class="stock-readout">
-            <span>庫存 ${stock}</span>
-            <span class="showroom-text">展廳 ${showroom}</span>
-            <span class="sold-text">已售 ${sold}</span>
-            ${booked ? `<span class="booked-text">已訂 ${booked}</span>` : ""}
+            <span class="available-text">可卖 ${Math.max(0, stock - booked)}</span>
+            ${booked ? `<span class="booked-text">已订 ${booked}</span>` : ""}
+            ${showroom ? `<span class="showroom-text">展厅 ${showroom}</span>` : ""}
+            ${sold ? `<span class="sold-text">已售 ${sold}</span>` : ""}
           </div>
         </div>
       </article>`;
@@ -1747,7 +1747,7 @@
 
   function selectFilter(filter) {
     state.stockFilter = filter;
-    el.stockFilters.querySelectorAll("[data-filter]").forEach((button) => {
+    document.querySelectorAll(".filter-row [data-filter], .summary-grid [data-filter]").forEach((button) => {
       button.classList.toggle("is-active", button.dataset.filter === filter);
     });
     render();
@@ -1792,8 +1792,9 @@
         const photo = isAll ? null : photos.get(category.label);
         const active = isAll ? state.selectedCategories.size === 0 : state.selectedCategories.has(category.label);
         const image = isAll ? allCategoryPhotoMarkup(montagePhotos) : categoryPhotoMarkup(photo);
-        const textFallback = image ? "" : escapeHtml(category.label);
-        return `<button class="category-button${image ? "" : " is-text"} ${active ? "is-active" : ""}" data-category="${escapeHtml(category.value)}" data-category-label="${escapeHtml(category.label)}" title="${escapeHtml(category.label)}" aria-label="${escapeHtml(category.label)}" type="button">${image || textFallback}</button>`;
+        const name = `<span class="category-name">${escapeHtml(category.label)}</span>`;
+        const content = image ? `<span class="category-thumb">${image}</span>${name}` : name;
+        return `<button class="category-button${image ? "" : " is-text"} ${active ? "is-active" : ""}" data-category="${escapeHtml(category.value)}" data-category-label="${escapeHtml(category.label)}" title="${escapeHtml(category.label)}" aria-label="${escapeHtml(category.label)}" aria-pressed="${active}" type="button">${content}</button>`;
       })()
     ).join("");
   }
@@ -3075,6 +3076,13 @@
     if (!item) return;
     openDetail(item);
   });
+  el.inventoryGrid.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    const card = event.target.closest(".inventory-card");
+    if (!card || event.target !== card) return;
+    event.preventDefault();
+    card.click();
+  });
   el.loadMoreButton.hidden = true;
   el.dialogClose.addEventListener("click", () => el.detailDialog.close());
   el.detailDialog.addEventListener("click", (event) => {
@@ -3115,6 +3123,13 @@
   });
   if (el.feedbackSubmit) el.feedbackSubmit.addEventListener("click", submitFeedback);
   if (el.exportButton) el.exportButton.addEventListener("click", openLiveExcel);
+  const moreMenu = document.querySelector(".more-menu");
+  if (moreMenu) {
+    document.addEventListener("click", (event) => {
+      if (moreMenu.open && (!moreMenu.contains(event.target) || event.target.closest(".more-panel button"))) moreMenu.open = false;
+    });
+    document.addEventListener("keydown", (event) => { if (event.key === "Escape") moreMenu.open = false; });
+  }
   if (el.resetLocalButton) el.resetLocalButton.addEventListener("click", openCloudResetLocal);
   if (el.reinstallButton) el.reinstallButton.addEventListener("click", reinstallLatestDesktop);
   if (el.uploadButton) el.uploadButton.addEventListener("click", handleUpdateClick);

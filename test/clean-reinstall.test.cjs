@@ -9,6 +9,8 @@ const test = require("node:test");
 
 const root = path.resolve(__dirname, "..");
 const script = path.join(root, "build", "clean-reinstall.ps1");
+// The installer runs Windows PowerShell 5.1 (clean-reinstall.nsh); use PowerShell 7 only when it is installed.
+const powershellExecutable = childProcess.spawnSync("pwsh", ["-NoProfile", "-Command", "exit 0"]).status === 0 ? "pwsh" : "powershell";
 
 function runFixture(t, body) {
   const fixture = fs.mkdtempSync(path.join(os.tmpdir(), "tek-stock-clean-reinstall-"));
@@ -19,7 +21,7 @@ function runFixture(t, body) {
     `. '${script.replace(/'/g, "''")}'`,
     body,
   ].join("\r\n"));
-  return childProcess.spawnSync("pwsh", ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", runner], {
+  return childProcess.spawnSync(powershellExecutable, ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", runner], {
     encoding: "utf8",
   });
 }

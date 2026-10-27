@@ -1,59 +1,65 @@
 <!doctype html>
-<html lang="zh-Hant">
+<html lang="zh-Hans">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#146c68">
   <title>TEK STOCK 新加坡库存</title>
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="stylesheet" href="styles.css?v=20260726-white-full-photo-v1">
+  <link rel="stylesheet" href="styles.css?v=20261027-easier-ui-v1">
 </head>
 <body>
   <div class="app-shell">
     <header class="app-header">
       <div class="brand-lockup">
         <img class="brand-logo" src="assets/tek-stock-logo.png" alt="TEK STOCK">
-        <div>
-        <p class="eyebrow">HP SOFA · INVENTORY</p>
-        <h1>TEK STOCK 新加坡库存</h1>
+        <div class="brand-text">
+          <h1>TEK STOCK <span>新加坡库存</span></h1>
+          <div class="version-badge" aria-label="Application and cloud versions">
+            <span>App v1.6.16</span>
+            <span id="cloudVersion">Cloud v0</span>
+            <span class="update-receipt" id="updateReceipt">Update check pending</span>
+          </div>
         </div>
       </div>
       <div class="header-actions">
-        <div class="version-badge" aria-label="Application and cloud versions">
-            <span>App v1.6.16</span>
-          <span id="cloudVersion">Cloud v0</span>
-          <span class="update-receipt" id="updateReceipt">Update check pending</span>
-        </div>
-        <button class="update-button" id="uploadButton" type="button" aria-label="Update" title="Update">
+        <button class="update-button" id="uploadButton" type="button" aria-label="Update" title="从云端更新库存，并检查新版本">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66M20 4v6h-6"/></svg>
-          <span>Update</span>
+          <span>更新</span>
         </button>
-        <button class="reinstall-button desktop-only" id="reinstallButton" type="button" aria-label="Reinstall TEK STOCK" title="Download, verify, and reinstall the latest TEK STOCK desktop app">Reinstall</button>
-        <button class="excel-button desktop-only" id="exportButton" type="button" aria-label="Export Excel" title="Export Excel">Excel</button>
-        <button class="reset-local-button desktop-only" id="resetLocalButton" type="button" aria-label="从云端重置本机" title="Discard local changes and rebuild this computer from live cloud">从云端重置本机</button>
+        <button class="excel-button desktop-only" id="exportButton" type="button" aria-label="Export Excel" title="打开 TEK-STOCK-LIVE.xlsx">打开 Excel</button>
+        <details class="more-menu desktop-only">
+          <summary aria-label="更多操作" title="更多操作"><span aria-hidden="true">⋯</span><span class="more-label">更多</span></summary>
+          <div class="more-panel">
+            <p class="more-hint">只有出问题时才需要用这里的功能</p>
+            <button class="reinstall-button" id="reinstallButton" type="button" aria-label="Reinstall TEK STOCK" title="Download, verify, and reinstall the latest TEK STOCK desktop app">Reinstall</button>
+            <small>重新下载并安装最新版桌面 APP</small>
+            <button class="reset-local-button" id="resetLocalButton" type="button" aria-label="从云端重置本机" title="Discard local changes and rebuild this computer from live cloud">从云端重置本机</button>
+            <small>放弃本机未同步的修改，按云端重建（会先备份）</small>
+          </div>
+        </details>
       </div>
     </header>
 
     <main>
-      <section class="summary-panel" aria-label="Stock summary">
-        <div class="summary-main">
-          <span>Total stock</span>
-          <strong id="totalStock">—</strong>
-          <small>pcs</small>
+      <section class="overview" aria-label="库存概况">
+        <div class="summary-panel" aria-label="Stock summary">
+          <div class="summary-main">
+            <span>总库存</span>
+            <strong id="totalStock">—</strong>
+            <small>件</small>
+          </div>
+          <div class="summary-grid">
+            <button class="summary-stat" data-filter="all" type="button" title="显示全部型号"><strong id="totalModels">—</strong><span>个型号</span></button>
+            <div class="summary-stat"><strong id="totalSold">0</strong><span>累计售出</span></div>
+          </div>
         </div>
-        <div class="summary-grid">
-          <button class="summary-stat" data-filter="all" type="button"><strong id="totalModels">—</strong><span>Models</span></button>
-          <div class="summary-stat"><strong id="totalSold">0</strong><span>累計售出</span></div>
-          <button class="filter-button" data-filter="low" type="button">&#20302;&#24211;&#23384;</button>
-          <button class="filter-button" data-filter="out" type="button">&#32570;&#36135;</button>
+        <div class="mv-tiles" aria-label="今天要关注">
+          <button class="mv-tile" type="button" data-mv-jump="stock"><strong class="mv-num" id="mvAvailable">—</strong><span>可卖数量（件）</span></button>
+          <button class="mv-tile" type="button" data-mv-jump="orders"><strong class="mv-num" id="mvDueSoon">—</strong><span>7 天内要送货</span></button>
+          <button class="mv-tile" type="button" data-mv-jump="incoming"><strong class="mv-num" id="mvTransit">—</strong><span>在路上（未到货）</span></button>
+          <button class="mv-tile" type="button" data-mv-jump="orders" id="mvOversoldTile"><strong class="mv-num" id="mvOversold">—</strong><span>订单超过库存的型号</span></button>
         </div>
-      </section>
-
-      <section class="mv-tiles" aria-label="今天要关注">
-        <button class="mv-tile" type="button" data-mv-jump="stock"><strong class="mv-num" id="mvAvailable">—</strong><span>可卖数量 (pcs)</span></button>
-        <button class="mv-tile" type="button" data-mv-jump="orders"><strong class="mv-num" id="mvDueSoon">—</strong><span>7 天内要送货</span></button>
-        <button class="mv-tile" type="button" data-mv-jump="incoming"><strong class="mv-num" id="mvTransit">—</strong><span>在路上 (未到货)</span></button>
-        <button class="mv-tile" type="button" data-mv-jump="orders" id="mvOversoldTile"><strong class="mv-num" id="mvOversold">—</strong><span>订单超过库存的型号</span></button>
       </section>
 
       <nav class="mv-tabs" id="viewTabs" role="tablist" aria-label="工作页面">
@@ -66,34 +72,36 @@
       <section class="control-panel">
         <label class="search-box">
           <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg>
-          <input id="searchInput" type="search" placeholder="&#25628;&#32034;&#22411;&#21495;&#12289;&#35268;&#26684;&#25110;&#35760;&#24405;" autocomplete="off">
-          <button id="clearSearch" type="button" aria-label="&#28165;&#38500;&#25628;&#32034;">X</button>
+          <input id="searchInput" type="search" placeholder="搜索型号、规格、PO 或记录" autocomplete="off">
+          <button id="clearSearch" type="button" aria-label="清除搜索" title="清除搜索">×</button>
         </label>
-        <div class="filter-row" id="stockFilters" aria-label="&#24211;&#23384;&#31579;&#36873;">
-          <button class="filter-button is-active" data-filter="all" type="button">&#20840;&#37096;</button>
-          <button class="filter-button" data-filter="available" type="button">&#26377;&#36135;</button>
-          <button class="filter-button" data-filter="low" type="button">&#20302;&#24211;&#23384;</button>
-          <button class="filter-button" data-filter="out" type="button">&#32570;&#36135;</button>
-        </div>
-        <div class="category-filter-line">
-          <div class="category-row" id="categoryFilters" aria-label="&#20998;&#31867;&#31579;&#36873;"></div>
-          <div class="sort-row" id="sortControls" aria-label="库存及加入时间排序">
-            <button class="sort-button" data-sort="desc" type="button" aria-label="库存从多到少" title="库存从多到少">↓</button>
-            <button class="sort-button" data-sort="asc" type="button" aria-label="库存从少到多" title="库存从少到多">↑</button>
-            <button class="sort-button sort-newest" data-sort="newest" type="button" aria-label="最新加入在前" title="最新加入在前">✦</button>
+        <div class="toolbar-row">
+          <div class="filter-row" id="stockFilters" aria-label="库存筛选">
+            <button class="filter-button is-active" data-filter="all" type="button">全部</button>
+            <button class="filter-button" data-filter="available" type="button">有货</button>
+            <button class="filter-button" data-filter="low" type="button">低库存</button>
+            <button class="filter-button" data-filter="out" type="button">缺货</button>
+          </div>
+          <div class="sort-row" id="sortControls" aria-label="排序">
+            <span class="sort-caption">排序</span>
+            <button class="sort-button" data-sort="desc" type="button" aria-label="库存从多到少" title="库存从多到少">库存多→少</button>
+            <button class="sort-button" data-sort="asc" type="button" aria-label="库存从少到多" title="库存从少到多">库存少→多</button>
+            <button class="sort-button sort-newest" data-sort="newest" type="button" aria-label="最新加入在前" title="最新加入在前">最新加入</button>
           </div>
         </div>
+        <div class="category-row" id="categoryFilters" aria-label="分类筛选（可多选）"></div>
       </section>
 
       <div class="result-heading">
-        <div><span id="resultCount">-</span> &#20010;&#21697;&#39033;</div>
+        <div>共 <span id="resultCount">-</span> 个品项</div>
+        <span class="result-hint">点击产品查看详情、卖出或入仓</span>
       </div>
 
       <section class="inventory-grid" id="inventoryGrid" aria-live="polite"></section>
-      <button class="load-more" id="loadMoreButton" type="button" hidden>Show more</button>
+      <button class="load-more" id="loadMoreButton" type="button" hidden>显示更多</button>
       <div class="empty-state" id="emptyState" hidden>
         <span>∅</span>
-        <strong>No items found</strong><p>Try another search or category.</p>
+        <strong>没有找到品项</strong><p>换个关键词，或点“全部”清除筛选。</p>
       </div>
       </div>
 
@@ -126,24 +134,24 @@
         <p class="detail-category" id="detailCategory"></p>
         <h2 id="detailModel"></h2>
         <div class="detail-stock-row">
-          <div><span>目前庫存</span><input class="stock-edit" id="detailStock" type="number" step="1" readonly></div>
-          <div><span>本次出貨變動</span><input class="stock-edit sold-edit" id="detailSoldNow" type="number" step="1" value="0" readonly></div>
-          <div><span>累計售出</span><strong id="detailTotalSold">0</strong></div>
+          <div><span>目前库存</span><input class="stock-edit" id="detailStock" type="number" step="1" readonly></div>
+          <div><span>本次出货变动</span><input class="stock-edit sold-edit" id="detailSoldNow" type="number" step="1" value="0" readonly></div>
+          <div><span>累计售出</span><strong id="detailTotalSold">0</strong></div>
         </div>
         <div class="mv-panel" id="movementPanel"></div>
         <p class="mv-section-label">价格与文字记录</p>
         <dl class="detail-list">
-          <div><dt>Cost</dt><dd><input class="detail-edit" id="detailCost" data-edit-field="cost" inputmode="decimal"></dd></div>
-          <div><dt>Selling Price</dt><dd><input class="detail-edit" id="detailPrice" data-edit-field="sellingPriceText"></dd></div>
-          <div><dt>Spec</dt><dd><textarea class="detail-edit" id="detailSpec" data-edit-field="specification" rows="2"></textarea></dd></div>
-          <div><dt>Arrival</dt><dd><textarea class="detail-edit" id="detailArrival" data-edit-field="arrival" rows="2"></textarea></dd></div>
-          <div><dt>Showroom</dt><dd><textarea class="detail-edit" id="detailShowroom" data-edit-field="showroom" rows="2"></textarea></dd></div>
-          <div><dt>Outbound</dt><dd><textarea class="detail-edit" id="detailOutbound" data-edit-field="outbound" rows="3"></textarea></dd></div>
+          <div><dt>成本</dt><dd><input class="detail-edit" id="detailCost" data-edit-field="cost" inputmode="decimal"></dd></div>
+          <div><dt>售价</dt><dd><input class="detail-edit" id="detailPrice" data-edit-field="sellingPriceText"></dd></div>
+          <div><dt>规格</dt><dd><textarea class="detail-edit" id="detailSpec" data-edit-field="specification" rows="2"></textarea></dd></div>
+          <div><dt>到货记录</dt><dd><textarea class="detail-edit" id="detailArrival" data-edit-field="arrival" rows="2"></textarea></dd></div>
+          <div><dt>展厅记录</dt><dd><textarea class="detail-edit" id="detailShowroom" data-edit-field="showroom" rows="2"></textarea></dd></div>
+          <div><dt>出货记录</dt><dd><textarea class="detail-edit" id="detailOutbound" data-edit-field="outbound" rows="3"></textarea></dd></div>
         </dl>
         <div class="detail-actions">
-          <button class="save-detail-button" id="saveDetailButton" type="button">Save</button>
-          <button class="reset-detail-button" id="resetDetailButton" type="button">Reset</button>
-          <button class="change-photo-button" id="changePhotoButton" type="button">更換照片</button>
+          <button class="save-detail-button" id="saveDetailButton" type="button">保存</button>
+          <button class="reset-detail-button" id="resetDetailButton" type="button" title="放弃未保存的修改">还原</button>
+          <button class="change-photo-button" id="changePhotoButton" type="button">更换照片</button>
           <button class="feedback-button" id="feedbackButton" type="button">反馈照片问题</button>
         </div>
         <p class="source-note" id="detailSource"></p>
@@ -154,7 +162,7 @@
 
 
   <dialog class="image-preview-dialog" id="imagePreviewDialog">
-    <button class="dialog-close image-preview-close" id="imagePreviewClose" type="button" aria-label="Close">X</button>
+    <button class="dialog-close image-preview-close" id="imagePreviewClose" type="button" aria-label="Close">×</button>
     <img id="imagePreview" alt="Product photo">
   </dialog>
 
@@ -176,17 +184,17 @@
     </div>
   </dialog>
 
-  <button class="help-fab" id="helpButton" type="button" aria-label="Help">?</button>
+  <button class="help-fab" id="helpButton" type="button" aria-label="Help" title="帮助">?</button>
   <dialog class="help-dialog" id="helpDialog">
     <div class="help-card">
-      <button class="dialog-close" id="helpClose" type="button" aria-label="Close">?</button>
-      <p class="detail-category">Help</p>
-      <h2>Stock sync and backup</h2>
+      <button class="dialog-close" id="helpClose" type="button" aria-label="Close">×</button>
+      <p class="detail-category">帮助</p>
+      <h2>同步与备份</h2>
       <dl class="detail-list">
-        <div><dt>Cloud data</dt><dd id="helpDataLocation">Alibaba Central API.</dd></div>
-        <div><dt>Phone app</dt><dd>Phone app is read-only. It updates from cloud when opened or when pressing Update.</dd></div>
+        <div><dt>云端资料</dt><dd id="helpDataLocation">Alibaba Central API.</dd></div>
+        <div><dt>手机 APP</dt><dd>手机 APP 只能查看。打开或按“更新”时会从云端取最新库存。</dd></div>
         <div><dt>照片反馈</dt><dd>打开品项后按“反馈照片问题”，上传截图和说明。</dd></div>
-        <div><dt>Desktop app</dt><dd>桌面 APP 与 TEK-STOCK-LIVE.xlsx 双向同步；APP 或 Excel 修改后都会更新另一边及手机云端。新电脑第一次上传修改时会要求输入同步密钥，并使用 Windows 加密保存。</dd></div>
+        <div><dt>桌面 APP</dt><dd>桌面 APP 与 TEK-STOCK-LIVE.xlsx 双向同步；APP 或 Excel 修改后都会更新另一边及手机云端。新电脑第一次上传修改时会要求输入同步密钥，并使用 Windows 加密保存。</dd></div>
       </dl>
     </div>
   </dialog>

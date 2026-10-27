@@ -1,6 +1,6 @@
 {
-  "apiBaseUrl": "https://tek-stock-cloudflare-sync.teopoh72.workers.dev",
+  "apiBaseUrl": "https://tek-stock-inventory-sg.teopoh72.workers.dev",
   "apiFallbackBaseUrls": [],
-  "authorityId": "tek-stock-cloudflare",
-  "ossPublicBaseUrl": "https://tek-stock-cloudflare-sync.teopoh72.workers.dev"
+  "authorityId": "tek-stock-independent-v1",
+  "ossPublicBaseUrl": "https://tek-stock-inventory-sg.teopoh72.workers.dev"
 }

@@ -40,3 +40,23 @@ test("generic auth fault recovers with successful cloud stage and started never 
   const delayed = summarizeChanges([row({ stage: "app.error", event_sequence: 1, occurred_at: "2026-09-22T04:10:00.000Z" })], recovered.state);
   assert.deepEqual(delayed.changes, []);
 });
+test("monitor reads Alibaba reports and still reports when Cloudflare cannot be read", async () => {
+  const fs = require("node:fs"), os = require("node:os"), path = require("node:path");
+  const { run } = require("../scripts/diagnostics-monitor.cjs");
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "tek-monitor-"));
+  const tokenFile = path.join(dir, "tokens.json"), state = path.join(dir, "state.json");
+  fs.writeFileSync(tokenFile, JSON.stringify({ monitorToken: "m".repeat(40) }));
+  const seen = [];
+  const fetchImpl = async (url, init) => { seen.push({ url, auth: init.headers.authorization });
+    return { ok: true, json: async () => ({ rows: [row({ app_version: "1.6.17", received_at: new Date().toISOString() })] }) }; };
+  const result = await run(["--wrangler", path.join(dir, "missing-wrangler.js"), "--alibaba", "https://example.fcapp.run/", "--token-file", tokenFile, "--state", state], { fetchImpl });
+  assert.equal(result.ok, true);
+  assert.equal(result.sources.alibaba, 1);
+  assert.match(String(result.sources.cloudflare), /^MONITOR_/);
+  assert.equal(result.changes.length, 1);
+  assert.match(seen[0].url, /^https:\/\/example\.fcapp\.run\/v1\/diagnostics\/events\?since=/);
+  assert.equal(seen[0].auth, "Bearer " + "m".repeat(40));
+  await assert.rejects(run(["--alibaba", "https://example.fcapp.run", "--token-file", tokenFile, "--state", state],
+    { fetchImpl: async () => ({ ok: false }) }), /MONITOR_QUERY_FAILED/);
+  fs.rmSync(dir, { recursive: true, force: true });
+});

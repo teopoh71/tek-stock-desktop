@@ -41,25 +41,54 @@ function summarizeChanges(rows, previous = {}) {
   }
   return { changes, state };
 }
-function run(argv = process.argv.slice(2)) {
-  const options = Object.fromEntries(argv.map((arg, index) => arg.startsWith("--") ? [arg.slice(2), argv[index + 1]] : null).filter(Boolean));
-  if (!options.wrangler || !options.state || !path.isAbsolute(options.wrangler) || !path.isAbsolute(options.state)) throw Error("MONITOR_ARGUMENTS_REQUIRED");
-  const since = new Date(Date.now() - 7 * 86400000).toISOString();
-  const query = `SELECT device_id, authority_id, app_version, stage, error_code, ok, recovered, occurred_at, received_at, revision, pending_count, event_sequence FROM diagnostic_events WHERE device_id <> 'legacy' AND received_at >= '${since}' ORDER BY received_at ASC, occurred_at ASC LIMIT 5000`;
-  const result = JSON.parse(execFileSync(process.execPath, [options.wrangler, "d1", "execute", DATABASE, "--remote", "--command", query, "--json"], { encoding: "utf8", windowsHide: true, maxBuffer: 4 * 1024 * 1024, timeout: 45000, stdio: ["ignore", "pipe", "pipe"] }));
+const COLUMNS = ["device_id", "authority_id", "app_version", "stage", "error_code", "ok", "recovered", "occurred_at", "received_at", "revision", "pending_count", "event_sequence"];
+function cloudflareRows(wrangler, since) {
+  const query = `SELECT ${COLUMNS.join(", ")} FROM diagnostic_events WHERE device_id <> 'legacy' AND received_at >= '${since}' ORDER BY received_at ASC, occurred_at ASC LIMIT 5000`;
+  const result = JSON.parse(execFileSync(process.execPath, [wrangler, "d1", "execute", DATABASE, "--remote", "--command", query, "--json"], { encoding: "utf8", windowsHide: true, maxBuffer: 4 * 1024 * 1024, timeout: 45000, stdio: ["ignore", "pipe", "pipe"] }));
   if (!Array.isArray(result) || !result.length || result.some(x => x.success !== true || Number(x.meta?.rows_written || 0) !== 0)) throw Error("MONITOR_QUERY_FAILED");
-  const rows = result.flatMap(x => x.results || []);
-  if (rows.length >= 5000) throw Error("MONITOR_WINDOW_LIMIT_REACHED");
+  return result.flatMap(x => x.results || []);
+}
+// Computers on 1.6.17+ report to Alibaba; the monitor token stays in its file and is never printed.
+async function alibabaRows(base, tokenFile, since, fetchImpl = fetch) {
+  const token = JSON.parse(fs.readFileSync(tokenFile, "utf8")).monitorToken;
+  if (typeof token !== "string" || token.length < 32) throw Error("MONITOR_TOKEN_MISSING");
+  const response = await fetchImpl(`${base.replace(/\/+$/, "")}/v1/diagnostics/events?since=${encodeURIComponent(since)}`, { headers: { authorization: `Bearer ${token}` }, signal: AbortSignal.timeout(45000) });
+  if (!response.ok) throw Error("MONITOR_QUERY_FAILED");
+  const body = await response.json();
+  if (!Array.isArray(body.rows)) throw Error("MONITOR_QUERY_FAILED");
+  return body.rows.map(row => Object.fromEntries(COLUMNS.map(column => [column, row[column] ?? null])));
+}
+async function run(argv = process.argv.slice(2), { fetchImpl = fetch } = {}) {
+  const options = Object.fromEntries(argv.map((arg, index) => arg.startsWith("--") ? [arg.slice(2), argv[index + 1]] : null).filter(Boolean));
+  if (!options.state || !path.isAbsolute(options.state)) throw Error("MONITOR_ARGUMENTS_REQUIRED");
+  if (!options.wrangler && !options.alibaba) throw Error("MONITOR_ARGUMENTS_REQUIRED");
+  if (options.wrangler && !path.isAbsolute(options.wrangler)) throw Error("MONITOR_ARGUMENTS_REQUIRED");
+  if (options.alibaba && !(options["token-file"] && path.isAbsolute(options["token-file"]) && /^https:\/\//.test(options.alibaba))) throw Error("MONITOR_ARGUMENTS_REQUIRED");
+  const since = new Date(Date.now() - 7 * 86400000).toISOString();
+  const rows = [], sources = {};
+  // One cloud failing must not hide reports the other one holds; only fail when nothing could be read.
+  for (const [name, read] of [
+    ["cloudflare", options.wrangler && (() => cloudflareRows(options.wrangler, since))],
+    ["alibaba", options.alibaba && (() => alibabaRows(options.alibaba, options["token-file"], since, fetchImpl))],
+  ]) {
+    if (!read) continue;
+    try { const found = await read(); rows.push(...found); sources[name] = found.length; }
+    catch (error) { sources[name] = /^MONITOR_[A-Z_]+$/.test(error.message) ? error.message : "MONITOR_CHECK_FAILED"; }
+  }
+  if (!Object.values(sources).some(value => typeof value === "number")) throw Error(Object.values(sources)[0] || "MONITOR_CHECK_FAILED");
+  if (Object.values(sources).some(value => value >= 5000)) throw Error("MONITOR_WINDOW_LIMIT_REACHED");
+  rows.sort((x, y) => String(x.received_at).localeCompare(String(y.received_at)) || String(x.occurred_at).localeCompare(String(y.occurred_at)));
   const prior = fs.existsSync(options.state) ? JSON.parse(fs.readFileSync(options.state, "utf8")) : {};
   const summary = summarizeChanges(rows, prior);
   fs.mkdirSync(path.dirname(options.state), { recursive: true });
   const temp = `${options.state}.${process.pid}.tmp`;
   fs.writeFileSync(temp, JSON.stringify(summary.state), { encoding: "utf8", mode: 0o600 });
   fs.renameSync(temp, options.state);
-  return { ok: true, checkedAt: new Date().toISOString(), observedDevices: new Set(rows.filter(r => /^d-[a-f0-9]{32}$/.test(r.device_id) && r.device_id !== VERIFICATION_DEVICE).map(r => r.device_id)).size, changes: summary.changes };
+  return { ok: true, checkedAt: new Date().toISOString(), sources, observedDevices: new Set(rows.filter(r => /^d-[a-f0-9]{32}$/.test(r.device_id) && r.device_id !== VERIFICATION_DEVICE).map(r => r.device_id)).size, changes: summary.changes };
 }
 if (require.main === module) {
-  try { console.log(JSON.stringify(run())); }
-  catch (error) { console.log(JSON.stringify({ ok: false, errorCode: /^MONITOR_[A-Z_]+$/.test(error.message) ? error.message : "MONITOR_CHECK_FAILED" })); process.exitCode = 1; }
+  run().then(result => console.log(JSON.stringify(result)), error => {
+    console.log(JSON.stringify({ ok: false, errorCode: /^MONITOR_[A-Z_]+$/.test(error.message) ? error.message : "MONITOR_CHECK_FAILED" })); process.exitCode = 1;
+  });
 }
-module.exports = { summarizeChanges, run };
+module.exports = { summarizeChanges, run, alibabaRows };

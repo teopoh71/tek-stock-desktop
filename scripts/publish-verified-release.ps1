@@ -31,7 +31,7 @@ function JsonRequest($client,$method,$url,$body=$null){
 $base='https://api.github.com/repos/teopoh71/tek-stock-desktop'
 $res=$gh.GetAsync("$base/releases/tags/$tag").GetAwaiter().GetResult()
 if([int]$res.StatusCode -eq 404){
- $release=JsonRequest $gh POST "$base/releases" @{tag_name=$tag;target_commitish=$commit;name="TEK STOCK $version";draft=$true;prerelease=$false;body="Windows 10/11 x64. Follows validated HTTPS download redirects synchronously in Electron. Checks verified software updates even after Excel sync fails; keeps the sync failure visible. Preserves existing workbook, credentials, outbox and photo cache. Packaged isolated sync and upgrade checks passed. The reported Singapore UNKNOWN_ERROR remains under investigation."}
+ $release=JsonRequest $gh POST "$base/releases" @{tag_name=$tag;target_commitish=$commit;name="TEK STOCK $version";draft=$true;prerelease=$false;body="Windows 10/11 x64. Stock, photos, error reports and updates now use the Alibaba Singapore cloud. Simpler stock screen; cloud requests wait up to 15 s. Preserves existing workbook, credentials, outbox and photo cache. Packaged isolated sync and upgrade checks passed."}
 }else{
  if(!$res.IsSuccessStatusCode){throw 'RELEASE_ACCESS_FAILED'}
  $release=$res.Content.ReadAsStringAsync().GetAwaiter().GetResult()|ConvertFrom-Json

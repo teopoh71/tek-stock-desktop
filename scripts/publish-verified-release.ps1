@@ -13,14 +13,6 @@ $file=Join-Path $root "dist-update\$name"
 $hash=(Get-FileHash -Algorithm SHA256 $file).Hash.ToLowerInvariant()
 $size=(Get-Item $file).Length
 $commit=(& git -C $root rev-parse HEAD).Trim()
-$tag="v$version-auto-update"
-$env:GIT_TERMINAL_PROMPT='0'
-$raw=@('protocol=https','host=github.com','')|git credential fill
-$token=($raw|Where-Object {$_ -like 'password=*'}).Substring(9)
-$gh=[System.Net.Http.HttpClient]::new()
-$gh.Timeout=[TimeSpan]::FromMinutes(6)
-$gh.DefaultRequestHeaders.Authorization=[System.Net.Http.Headers.AuthenticationHeaderValue]::new('Bearer',$token)
-$gh.DefaultRequestHeaders.UserAgent.ParseAdd('TEK-STOCK-release')
 function JsonRequest($client,$method,$url,$body=$null){
  $req=[System.Net.Http.HttpRequestMessage]::new([System.Net.Http.HttpMethod]::new($method),$url)
  if($null -ne $body){$req.Content=[System.Net.Http.StringContent]::new(($body|ConvertTo-Json -Depth 30 -Compress),[Text.Encoding]::UTF8,'application/json')}
@@ -29,51 +21,20 @@ function JsonRequest($client,$method,$url,$body=$null){
  if(!$res.IsSuccessStatusCode){throw "HTTP_$([int]$res.StatusCode)_$method"}
  return $value
 }
-$base='https://api.github.com/repos/teopoh71/tek-stock-desktop'
-$res=$gh.GetAsync("$base/releases/tags/$tag").GetAwaiter().GetResult()
-# A draft is invisible to the tag lookup, so reuse one left by an earlier interrupted run.
-if([int]$res.StatusCode -eq 404){$release=@(JsonRequest $gh GET "$base/releases?per_page=30"|Where-Object {$_.tag_name -eq $tag})|Select-Object -First 1}
-if([int]$res.StatusCode -eq 404 -and !$release){
- $release=JsonRequest $gh POST "$base/releases" @{tag_name=$tag;target_commitish=$commit;name="TEK STOCK $version";draft=$true;prerelease=$false;body="Windows 10/11 x64. Uses the Alibaba Singapore cloud. Fixes: a second offline edit of the same item no longer becomes a false conflict; busy periods with several computers saving keep changes queued instead of marking them as conflicts. Preserves existing workbook, credentials, outbox and photo cache. Packaged isolated sync and upgrade checks passed."}
-}elseif(!$release){
- if(!$res.IsSuccessStatusCode){throw 'RELEASE_ACCESS_FAILED'}
- $release=$res.Content.ReadAsStringAsync().GetAwaiter().GetResult()|ConvertFrom-Json
-}
-$asset=@($release.assets|Where-Object name -eq $name)
-if(!$asset.Count){
- $url=$release.upload_url.Split('{')[0]+'?name='+[Uri]::EscapeDataString($name)
- $stream=[IO.File]::OpenRead($file)
- try{
-  $content=[System.Net.Http.StreamContent]::new($stream)
-  $content.Headers.ContentType=[System.Net.Http.Headers.MediaTypeHeaderValue]::new('application/octet-stream')
-  $r=$gh.PostAsync($url,$content).GetAwaiter().GetResult()
-  if(!$r.IsSuccessStatusCode){throw "ASSET_UPLOAD_HTTP_$([int]$r.StatusCode)"}
-  $asset=@($r.Content.ReadAsStringAsync().GetAwaiter().GetResult()|ConvertFrom-Json)
- }finally{$stream.Dispose()}
-}
-if($asset[0].size -ne $size){throw 'UPLOADED_SIZE_MISMATCH'}
-if($asset[0].digest -and $asset[0].digest -ne "sha256:$hash"){throw 'UPLOADED_HASH_MISMATCH'}
-$release=JsonRequest $gh PATCH "$base/releases/$($release.id)" @{draft=$false}
-# A draft asset has a temporary "untagged" address; take the published one.
-$origin=@($release.assets|Where-Object name -eq $name)[0].browser_download_url
-$public=[System.Net.Http.HttpClient]::new()
-$public.Timeout=[TimeSpan]::FromMinutes(6)
-$download=Join-Path $root "outputs\verified-$name"
-if(!(Test-Path $download) -or (Get-Item $download).Length -ne $size -or (Get-FileHash -Algorithm SHA256 $download).Hash.ToLowerInvariant() -ne $hash){
- for($attempt=0;$attempt -lt 3;$attempt++){
-  $r=$public.GetAsync($origin).GetAwaiter().GetResult()
-  if($r.IsSuccessStatusCode){break}
-  if([int]$r.StatusCode -notin @(404,429,500,502,503,504) -or $attempt -eq 2){throw "PUBLIC_ASSET_HTTP_$([int]$r.StatusCode)"}
-  $r.Dispose()
- }
- $bytes=$r.Content.ReadAsByteArrayAsync().GetAwaiter().GetResult()
- [IO.File]::WriteAllBytes($download,$bytes)
-}
-if((Get-Item $download).Length -ne $size -or (Get-FileHash -Algorithm SHA256 $download).Hash.ToLowerInvariant() -ne $hash){throw 'PUBLIC_ASSET_VERIFICATION_FAILED'}
+# Installers are hosted on Alibaba (design.myzolano.vip/tekstock): upload, download back and compare,
+# then publish the Alibaba update feed that 1.6.17 and later read first.
+$upload=& node (Join-Path $PSScriptRoot 'upload-installer-alibaba.cjs') $file --publish $version|Out-String
+if($LASTEXITCODE -ne 0){Write-Output $upload;throw 'ALIBABA_UPLOAD_FAILED'}
+$uploaded=$upload|ConvertFrom-Json
+if(!$uploaded.published -or $uploaded.sha256 -ne $hash -or $uploaded.size -ne $size){throw 'ALIBABA_UPLOAD_NOT_VERIFIED'}
+$origin=$uploaded.url
 Write-Output "PUBLIC_ASSET_VERIFIED $version $size $hash"
+$public=[System.Net.Http.HttpClient]::new()
+$public.Timeout=[TimeSpan]::FromMinutes(1)
 # Let Wrangler renew its existing OAuth session before reading the access token.
 $wrangler=Get-ChildItem (Join-Path $env:LOCALAPPDATA 'npm-cache\_npx\*\node_modules\wrangler\bin\wrangler.js') -File -ErrorAction SilentlyContinue|Select-Object -First 1
-if($wrangler){& node $wrangler.FullName whoami *> $null;if($LASTEXITCODE -ne 0){throw 'RELEASE_AUTH_REFRESH_FAILED'}}
+# Its warnings go to stderr, which Windows PowerShell 5.1 would treat as a failure under 'Stop'.
+if($wrangler){$ErrorActionPreference='Continue';& node $wrangler.FullName whoami *> $null;$ErrorActionPreference='Stop';if($LASTEXITCODE -ne 0){throw 'RELEASE_AUTH_REFRESH_FAILED'}}
 $c=Get-Content -Raw "$env:APPDATA\xdg.config\.wrangler\config\default.toml"
 $cfToken=[regex]::Match($c,'(?m)^oauth_token\s*=\s*"([^"\r\n]+)"').Groups[1].Value
 $cf=[System.Net.Http.HttpClient]::new()
@@ -97,16 +58,19 @@ $req.Content=$multipart
 $r=$cf.SendAsync($req).GetAwaiter().GetResult()
 $j=$r.Content.ReadAsStringAsync().GetAwaiter().GetResult()|ConvertFrom-Json
 if(!$r.IsSuccessStatusCode -or !$j.success){Write-Output ($j.errors|ConvertTo-Json -Depth 4);throw "MANIFEST_PROMOTION_HTTP_$([int]$r.StatusCode)"}
-foreach($url in @('https://tek-stock-maintenance.teopoh72.workers.dev/releases/latest.json','https://tek-stock-inventory-sg.teopoh72.workers.dev/releases/latest.json')){
+# Every feed must now offer this version: Cloudflare for 1.6.16 and before, Alibaba for 1.6.17 and later.
+foreach($url in @('https://tek-stock-maintenance.teopoh72.workers.dev/releases/latest.json','https://tek-stock-inventory-sg.teopoh72.workers.dev/releases/latest.json','https://tek-stock-sg-dsfbnvrbwu.ap-southeast-1.fcapp.run/releases/latest.json')){
  $matched=$false
- for($attempt=0;$attempt -lt 4;$attempt++){
+ for($attempt=0;$attempt -lt 8;$attempt++){
+  # Cloudflare takes a few seconds to roll the new settings out everywhere.
+  if($attempt){Start-Sleep -Seconds 5}
   $live=JsonRequest $public GET $url
   if($live.desktop.version -eq $version -and $live.desktop.windows10.sha256 -eq $hash -and $live.desktop.windows10.url -eq $origin){$matched=$true;break}
  }
  if(!$matched){throw "LIVE_MANIFEST_NOT_UPDATED"}
  Write-Output "LIVE_MANIFEST_VERIFIED $url $version"
 }
-$receipt=@{version=$version;size=$size;sha256=$hash;sourceCommit=$commit;releaseUrl=$release.html_url;downloadUrl=$manifest.desktop.windows10.url;verifiedAt=[DateTime]::UtcNow.ToString('o')}
+$receipt=@{version=$version;size=$size;sha256=$hash;sourceCommit=$commit;downloadUrl=$manifest.desktop.windows10.url;verifiedAt=[DateTime]::UtcNow.ToString('o')}
 $receipt|ConvertTo-Json|Set-Content -Encoding utf8 (Join-Path $root "outputs\release-$version-receipt.json")
 Copy-Item $file (Join-Path ([Environment]::GetFolderPath('Desktop')) $name)
 Write-Output ($receipt|ConvertTo-Json)

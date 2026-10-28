@@ -1,5 +1,6 @@
 param()
 $ErrorActionPreference='Stop'
+Add-Type -AssemblyName System.Net.Http
 $root=Split-Path $PSScriptRoot -Parent
 $package=Get-Content -Raw (Join-Path $root 'package.json')|ConvertFrom-Json
 $version=$package.version
@@ -14,7 +15,7 @@ $size=(Get-Item $file).Length
 $commit=(& git -C $root rev-parse HEAD).Trim()
 $tag="v$version-auto-update"
 $env:GIT_TERMINAL_PROMPT='0'
-$raw="protocol=https`nhost=github.com`n`n"|git credential fill
+$raw=@('protocol=https','host=github.com','')|git credential fill
 $token=($raw|Where-Object {$_ -like 'password=*'}).Substring(9)
 $gh=[System.Net.Http.HttpClient]::new()
 $gh.Timeout=[TimeSpan]::FromMinutes(6)
@@ -88,7 +89,7 @@ $body=@{bindings=$bindings;annotations=@{'workers/message'="Verified TEK STOCK $
 $multipart=[System.Net.Http.MultipartFormDataContent]::new()
 $part=[System.Net.Http.StringContent]::new(($body|ConvertTo-Json -Depth 15 -Compress),[Text.Encoding]::UTF8,'application/json')
 $multipart.Add($part,'settings')
-$req=[System.Net.Http.HttpRequestMessage]::new([System.Net.Http.HttpMethod]::Patch,"$cfBase/settings")
+$req=[System.Net.Http.HttpRequestMessage]::new([System.Net.Http.HttpMethod]::new('PATCH'),"$cfBase/settings")
 $req.Content=$multipart
 $r=$cf.SendAsync($req).GetAwaiter().GetResult()
 $j=$r.Content.ReadAsStringAsync().GetAwaiter().GetResult()|ConvertFrom-Json

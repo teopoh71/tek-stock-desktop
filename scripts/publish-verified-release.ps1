@@ -54,7 +54,8 @@ if(!$asset.Count){
 if($asset[0].size -ne $size){throw 'UPLOADED_SIZE_MISMATCH'}
 if($asset[0].digest -and $asset[0].digest -ne "sha256:$hash"){throw 'UPLOADED_HASH_MISMATCH'}
 $release=JsonRequest $gh PATCH "$base/releases/$($release.id)" @{draft=$false}
-$origin=$asset[0].browser_download_url
+# A draft asset has a temporary "untagged" address; take the published one.
+$origin=@($release.assets|Where-Object name -eq $name)[0].browser_download_url
 $public=[System.Net.Http.HttpClient]::new()
 $public.Timeout=[TimeSpan]::FromMinutes(6)
 $download=Join-Path $root "outputs\verified-$name"

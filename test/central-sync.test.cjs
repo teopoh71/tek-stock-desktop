@@ -2642,3 +2642,37 @@ test("seven stale workbook uploads cannot starve a queued explicit delete resolu
     .map((event) => event.opId));
   assert.deepEqual(supersededIds, new Set(stale.map((entry) => entry.opId)));
 });
+
+test("two offline edits of one item on one computer are not a conflict with each other", async (t) => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), "tek-offline-double-edit-"));
+  t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
+  const api = fakeAlibabaApi([{ id: "sofa", model: "SOFA", category: "Sofa", stock: 1 }]);
+  let offline = false;
+  const sync = service(directory, api, {
+    fetchImpl: (...args) => offline ? Promise.reject(new Error("offline")) : api.fetch(...args),
+  });
+  await sync.snapshot(false);
+  offline = true;
+  sync.enqueue([{ type: "update", itemId: "sofa", patch: { stock: 2 } }]);
+  await assert.rejects(sync.flush(), /offline/);
+  sync.enqueue([{ type: "update", itemId: "sofa", patch: { stock: 3 } }]);
+  sync.enqueue([{ type: "update", itemId: "sofa", patch: { specification: "GREY" } }]);
+  offline = false;
+  await sync.flush();
+  assert.equal(api.state.items[0].stock, 3);
+  assert.equal(api.state.items[0].specification, "GREY");
+  assert.equal(sync.outbox.snapshot().entries.filter((entry) => entry.state === "conflict").length, 0);
+});
+
+test("an edit from another computer in between is still a conflict, not overwritten", async (t) => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), "tek-offline-real-conflict-"));
+  t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
+  const original = { id: "sofa", model: "SOFA", category: "Sofa", stock: 1 };
+  const api = fakeAlibabaApi([original]);
+  const sync = service(directory, api);
+  await sync.snapshot(false);
+  sync.enqueue([{ type: "update", itemId: "sofa", patch: { stock: 2 } }]);
+  api.interposeNextBatch({ ...original, stock: 9 }, "other-desktop");
+  await assert.rejects(sync.flush(), { code: "CONCURRENT_MODIFICATION" });
+  assert.equal(api.state.items[0].stock, 9);
+});

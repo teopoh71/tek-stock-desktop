@@ -13,6 +13,7 @@ const { planReviewedLegacyReconciliation, verifyReviewedLegacyReconciliationResu
 
 const MAX_PHOTO_BYTES = 15_000_000;
 const MAX_CONFIRMED_REVISION_REBASES = 3;
+const RETRYABLE_ENTRY_STATES = new Set(["pending", "sent"]);
 const ITEM_FIELDS = new Set([
   "id", "model", "category", "stock", "stockText", "showroomQuantity",
   "computedTotalSold", "totalSold", "cost", "sellingPrice", "sellingPriceText",
@@ -522,6 +523,26 @@ function createCentralSync(options = {}) {
     if (readOnly) throw syncError("READ_ONLY_CLIENT");
     const baseSnapshot = context.baseSnapshot || lastKnownSnapshot;
     const baseItems = new Map((baseSnapshot?.items || []).map((item) => [String(item.id), item]));
+    // This computer's own unsent changes come first: a second offline edit of the same item starts
+    // from the first edit, not from the older cloud copy, so it is never a conflict with itself.
+    const project = (entry) => {
+      const before = baseItems.get(entry.itemId);
+      if (entry.type === "create") baseItems.set(entry.itemId, entry.item);
+      else if (entry.type === "delete") baseItems.delete(entry.itemId);
+      else if (entry.type === "update" && before) baseItems.set(entry.itemId, { ...before, ...(entry.patch || {}) });
+      else if (entry.type === "image" && before && entry.image) {
+        baseItems.set(entry.itemId, { ...before, image: entry.image.objectKey, imageSha256: entry.image.sha256, imageVersion: entry.image.imageVersion });
+      }
+    };
+    if (!context.baseSnapshot) {
+      // Delivered changes newer than the last stock read count too (the read after them may have failed).
+      const readRevision = Number(baseSnapshot?.revision) || 0;
+      outbox.snapshot().entries
+        .filter((entry) => entry.itemId && (RETRYABLE_ENTRY_STATES.has(entry.state)
+          || (entry.state === "acked" && Number(entry.commitRevision) > readRevision)))
+        .sort((left, right) => left.clientSeq - right.clientSeq)
+        .forEach(project);
+    }
     const entries = [];
     for (const operation of Array.isArray(operations) ? operations : []) {
       const type = String(operation?.type || "");
@@ -541,6 +562,7 @@ function createCentralSync(options = {}) {
         operator: operation.operator || context.operator,
         occurredAt: operation.occurredAt || context.occurredAt,
       }));
+      project(entries.at(-1));
     }
     return entries;
   }
@@ -747,18 +769,14 @@ function createCentralSync(options = {}) {
               });
               throw rebaseError;
             }
-          } else if (attempt >= 2) {
-            const conflictDetails = [{
-              reason: "revision-rebase-exhausted",
-              currentRevision: current.revision,
-              confirmedRebases: attempt,
-            }];
-            outbox.markConflict(entry.opId, {
-              conflictCode: "REVISION_REBASE_EXHAUSTED",
-              conflictDetails,
-            });
-            throw syncError("REVISION_REBASE_EXHAUSTED", { conflicts: conflictDetails });
+          } else if (attempt >= 5) {
+            // Other computers kept saving first. That is only contention (a real clash on the same
+            // field is caught by unsafeRebaseConflicts on every attempt), so the change stays queued
+            // for the next sync instead of becoming a conflict a person has to resolve.
+            throw syncError("CLOUD_BUSY_RETRY_LATER", { retryable: true });
           }
+          // A short random pause so computers that collided do not retry in lockstep.
+          await new Promise((resolve) => setTimeout(resolve, 50 + Math.random() * 200 * (attempt + 1)));
           continue;
         }
         if (["ITEM_NOT_FOUND", "ITEM_ALREADY_EXISTS", "IDEMPOTENCY_CONFLICT",

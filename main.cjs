@@ -1038,6 +1038,9 @@ function centralSyncService() {
   centralSync = createCentralSync({
     storageDirectory,
     fetchImpl: (url, init) => electronNet.fetch(url, init),
+    // A serverless cloud that has been idle can take ~7 s to answer its first request;
+    // the 5 s default reported those as API_REQUEST_TIMEOUT. Saves carry idempotency keys.
+    requestTimeoutMs: 15_000,
     getApiBaseUrl: () => readAlibabaCloudConfig().apiBaseUrl,
     getApiFallbackBaseUrls: () => readAlibabaCloudConfig().apiFallbackBaseUrls,
     getAuthorityId: () => readAlibabaCloudConfig().authorityId,

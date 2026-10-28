@@ -31,9 +31,11 @@ function JsonRequest($client,$method,$url,$body=$null){
 }
 $base='https://api.github.com/repos/teopoh71/tek-stock-desktop'
 $res=$gh.GetAsync("$base/releases/tags/$tag").GetAwaiter().GetResult()
-if([int]$res.StatusCode -eq 404){
- $release=JsonRequest $gh POST "$base/releases" @{tag_name=$tag;target_commitish=$commit;name="TEK STOCK $version";draft=$true;prerelease=$false;body="Windows 10/11 x64. Stock, photos, error reports and updates now use the Alibaba Singapore cloud. Simpler stock screen; cloud requests wait up to 15 s. Preserves existing workbook, credentials, outbox and photo cache. Packaged isolated sync and upgrade checks passed."}
-}else{
+# A draft is invisible to the tag lookup, so reuse one left by an earlier interrupted run.
+if([int]$res.StatusCode -eq 404){$release=@(JsonRequest $gh GET "$base/releases?per_page=30"|Where-Object {$_.tag_name -eq $tag})|Select-Object -First 1}
+if([int]$res.StatusCode -eq 404 -and !$release){
+ $release=JsonRequest $gh POST "$base/releases" @{tag_name=$tag;target_commitish=$commit;name="TEK STOCK $version";draft=$true;prerelease=$false;body="Windows 10/11 x64. Uses the Alibaba Singapore cloud. Fixes: a second offline edit of the same item no longer becomes a false conflict; busy periods with several computers saving keep changes queued instead of marking them as conflicts. Preserves existing workbook, credentials, outbox and photo cache. Packaged isolated sync and upgrade checks passed."}
+}elseif(!$release){
  if(!$res.IsSuccessStatusCode){throw 'RELEASE_ACCESS_FAILED'}
  $release=$res.Content.ReadAsStringAsync().GetAwaiter().GetResult()|ConvertFrom-Json
 }

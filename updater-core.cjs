@@ -7,8 +7,8 @@ const { createHash } = require("node:crypto");
 const { Transform } = require("node:stream");
 const { pipeline } = require("node:stream/promises");
 
-const DEFAULT_MANIFEST_URL = "https://tek-stock-maintenance.teopoh72.workers.dev/releases/latest.json";
-const FALLBACK_MANIFEST_URL = "https://tek-stock-inventory-sg.teopoh72.workers.dev/releases/latest.json";
+const DEFAULT_MANIFEST_URL = "https://tek-stock-sg-dsfbnvrbwu.ap-southeast-1.fcapp.run/releases/latest.json";
+const FALLBACK_MANIFEST_URL = "https://tek-stock-maintenance.teopoh72.workers.dev/releases/latest.json";
 const MAX_MANIFEST_BYTES = 64 * 1024;
 const MAX_INSTALLER_BYTES = 512 * 1024 * 1024;
 const DEFAULT_NETWORK_TIMEOUT_MS = 30_000;

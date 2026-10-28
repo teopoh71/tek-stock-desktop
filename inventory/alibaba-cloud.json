@@ -1,6 +1,6 @@
 {
-  "apiBaseUrl": "https://tek-stock-inventory-sg.teopoh72.workers.dev",
+  "apiBaseUrl": "https://tek-stock-sg-dsfbnvrbwu.ap-southeast-1.fcapp.run",
   "apiFallbackBaseUrls": [],
   "authorityId": "tek-stock-independent-v1",
-  "ossPublicBaseUrl": "https://tek-stock-inventory-sg.teopoh72.workers.dev"
+  "ossPublicBaseUrl": "https://tek-stock-sg-dsfbnvrbwu.ap-southeast-1.fcapp.run"
 }

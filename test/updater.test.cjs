@@ -179,9 +179,9 @@ test("manifest check retries the maintenance service then uses its configured fa
   const status = await handlers.get("tek-stock-updater-status")();
   assert.equal(status.ok, true);
   assert.deepEqual(seen.map(({ url }) => new URL(url).hostname), [
+    "tek-stock-sg-dsfbnvrbwu.ap-southeast-1.fcapp.run",
+    "tek-stock-sg-dsfbnvrbwu.ap-southeast-1.fcapp.run",
     "tek-stock-maintenance.teopoh72.workers.dev",
-    "tek-stock-maintenance.teopoh72.workers.dev",
-    "tek-stock-inventory-sg.teopoh72.workers.dev",
   ]);
   assert.ok(seen.every(({ timeoutMs }) => timeoutMs === 8_000));
   assert.deepEqual(receipts, [{
@@ -255,7 +255,7 @@ test("Update does not download or launch when the installed app is current", asy
     newerVersionFound: false,
     installerFound: true,
     channel: "windows10",
-    manifestSource: "other",
+    manifestSource: "singapore",
   });
 });
 

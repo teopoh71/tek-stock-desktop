@@ -13,6 +13,10 @@ const MAX_MANIFEST_BYTES = 64 * 1024;
 const MAX_INSTALLER_BYTES = 512 * 1024 * 1024;
 const DEFAULT_NETWORK_TIMEOUT_MS = 30_000;
 const DEFAULT_INSTALLER_TIMEOUT_MS = 120_000;
+// A long download over a poor overseas link can be cut off several times; each try keeps what arrived.
+const DOWNLOAD_TRIES_WITHOUT_PROGRESS = 5;
+const RETRYABLE_DOWNLOAD_CODES = new Set(["UPDATE_NETWORK_FAILED", "UPDATE_NETWORK_TIMEOUT", "UPDATE_HTTP_429",
+  "UPDATE_DOWNLOAD_INCOMPLETE", "UPDATE_RESUME_INVALID", "ERR_STREAM_PREMATURE_CLOSE", "ECONNRESET", "ETIMEDOUT", "EPIPE"]);
 
 function updaterError(code, detail) {
   const error = new Error(code);
@@ -123,6 +127,7 @@ function requestHttps(url, options = {}, redirectsLeft = 3) {
         redirect: "manual",
       });
       request.setHeader?.("User-Agent", options.userAgent || "TEK-STOCK-Updater");
+      if (options.rangeStart) request.setHeader?.("Range", `bytes=${options.rangeStart}-`);
       let remainingRedirects = redirectsLeft;
       request.on("redirect", (status, method, redirectUrl) => {
         try {
@@ -158,7 +163,7 @@ function requestHttps(url, options = {}, redirectsLeft = 3) {
           resolved = true;
           return resolve(requestHttps(next, options, redirectsLeft - 1));
         }
-        if (status !== 200) {
+        if (status !== 200 && !(status === 206 && options.rangeStart)) {
           clearWatchdog();
           response.resume?.();
           return reject(updaterError(`UPDATE_HTTP_${status || "ERROR"}`));
@@ -179,7 +184,10 @@ function requestHttps(url, options = {}, redirectsLeft = 3) {
   const client = options.https || https;
   return new Promise((resolve, reject) => {
     const request = client.get(parsed, {
-      headers: { "User-Agent": options.userAgent || "TEK-STOCK-Updater" },
+      headers: {
+        "User-Agent": options.userAgent || "TEK-STOCK-Updater",
+        ...(options.rangeStart ? { Range: `bytes=${options.rangeStart}-` } : {}),
+      },
     }, (response) => {
       const status = Number(response.statusCode) || 0;
       if ([301, 302, 303, 307, 308].includes(status)) {
@@ -193,7 +201,7 @@ function requestHttps(url, options = {}, redirectsLeft = 3) {
         }
         return resolve(requestHttps(next, options, redirectsLeft - 1));
       }
-      if (status !== 200) {
+      if (status !== 200 && !(status === 206 && options.rangeStart)) {
         response.resume();
         return reject(updaterError(`UPDATE_HTTP_${status || "ERROR"}`));
       }
@@ -229,40 +237,72 @@ async function fetchReleaseManifest(url = DEFAULT_MANIFEST_URL, options = {}) {
   }
 }
 
+function isRetryableDownloadError(error) {
+  // Electron reports dropped connections as plain errors ("net::ERR_...") without a code.
+  return !error?.code || RETRYABLE_DOWNLOAD_CODES.has(error.code) || /^UPDATE_HTTP_5\d\d$/.test(error.code);
+}
+
+async function sha256OfFile(file) {
+  const hash = createHash("sha256");
+  for await (const chunk of fs.createReadStream(file)) hash.update(chunk);
+  return hash.digest("hex");
+}
+
 async function downloadVerifiedInstaller(release, destination, options = {}) {
   const target = path.resolve(destination);
   const expectedSize = release.size;
   const maxBytes = options.maxBytes || MAX_INSTALLER_BYTES;
-  const response = await requestHttps(release.url, {
-    ...options,
-    timeoutMs: options.timeoutMs || DEFAULT_INSTALLER_TIMEOUT_MS,
-  });
-  const declaredSize = Number(response.headers["content-length"]);
-  if (declaredSize && (declaredSize > maxBytes || (expectedSize && declaredSize !== expectedSize))) {
-    response.destroy();
-    throw updaterError("UPDATE_DOWNLOAD_SIZE_MISMATCH");
-  }
-  const hash = createHash("sha256");
-  let bytes = 0;
+  const triesWithoutProgress = options.triesWithoutProgress || DOWNLOAD_TRIES_WITHOUT_PROGRESS;
   let created = false;
-  const output = fs.createWriteStream(target, { flags: "wx", mode: 0o600 });
-  output.once("open", () => { created = true; });
   try {
-    await pipeline(response, new Transform({
-      transform(chunk, _encoding, callback) {
-        bytes += chunk.length;
-        if (bytes > maxBytes) return callback(updaterError("UPDATE_INSTALLER_TOO_LARGE"));
-        hash.update(chunk);
-        callback(null, chunk);
-      },
-    }), output);
-    if (expectedSize && bytes !== expectedSize) throw updaterError("UPDATE_DOWNLOAD_SIZE_MISMATCH");
-    if (hash.digest("hex") !== release.sha256) throw updaterError("UPDATE_SHA256_MISMATCH");
-    return { path: target, bytes };
+    for (let failures = 0; ;) {
+      // After a dropped connection, ask only for the part that has not arrived yet.
+      const have = created ? fs.statSync(target).size : 0;
+      let bytes = 0;
+      try {
+        const response = await requestHttps(release.url, {
+          ...options,
+          timeoutMs: options.timeoutMs || DEFAULT_INSTALLER_TIMEOUT_MS,
+          rangeStart: have,
+        });
+        const resumed = have > 0 && Number(response.statusCode) === 206;
+        if (resumed && Number(/^bytes (\d+)-/.exec(response.headers["content-range"] || "")?.[1]) !== have) {
+          response.destroy();
+          fs.truncateSync(target, 0);
+          throw updaterError("UPDATE_RESUME_INVALID");
+        }
+        bytes = resumed ? have : 0;
+        const declaredSize = Number(response.headers["content-length"]);
+        if (declaredSize && (bytes + declaredSize > maxBytes || (expectedSize && bytes + declaredSize !== expectedSize))) {
+          response.destroy();
+          throw updaterError("UPDATE_DOWNLOAD_SIZE_MISMATCH");
+        }
+        // A server that ignores the range request sends the whole file again, so the file starts over.
+        const output = fs.createWriteStream(target, { flags: !created ? "wx" : resumed ? "a" : "w", mode: 0o600 });
+        output.once("open", () => { created = true; });
+        await pipeline(response, new Transform({
+          transform(chunk, _encoding, callback) {
+            bytes += chunk.length;
+            if (bytes > maxBytes) return callback(updaterError("UPDATE_INSTALLER_TOO_LARGE"));
+            callback(null, chunk);
+          },
+        }), output);
+        if (expectedSize && bytes < expectedSize) throw updaterError("UPDATE_DOWNLOAD_INCOMPLETE");
+        if (expectedSize && bytes !== expectedSize) throw updaterError("UPDATE_DOWNLOAD_SIZE_MISMATCH");
+        break;
+      } catch (error) {
+        // Count only bytes that reached the file as progress; a try that saved nothing counts toward giving up.
+        const saved = created && fs.existsSync(target) ? fs.statSync(target).size : 0;
+        failures = saved > have ? 1 : failures + 1;
+        if (!isRetryableDownloadError(error) || failures >= triesWithoutProgress) throw error;
+        await new Promise((resolve) => setTimeout(resolve, options.retryDelayMs ?? Math.min(1000 * failures, 5000)));
+      }
+    }
+    if (await sha256OfFile(target) !== release.sha256) throw updaterError("UPDATE_SHA256_MISMATCH");
+    return { path: target, bytes: fs.statSync(target).size };
   } catch (error) {
-    output.destroy();
     if (created) { try { fs.rmSync(target, { force: true }); } catch {} }
-    throw error?.code ? error : updaterError("UPDATE_DOWNLOAD_FAILED", error?.code);
+    throw error?.code ? error : updaterError("UPDATE_DOWNLOAD_FAILED", error?.message);
   }
 }
 
